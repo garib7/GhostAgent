@@ -2,7 +2,10 @@
 **Colosseum Solana Frontier Hackathon Submission - 2026**
 *Powered by Reis Architecture*
 
-![GhostAgent Banner](GhostAgent_logo.png)
+<p align="center">
+  <img src="GhostAgent_logo.png" width="400">
+</p>
+
 
 An autonomous AI agent natively built to leverage Solana's unparalleled speed and imperceptible transaction costs. Managing risk without human intervention, identifying micro-arbitrage opportunities, and executing scalping strategies within milliseconds.
 
