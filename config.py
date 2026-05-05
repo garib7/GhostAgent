@@ -6,7 +6,7 @@ CRITICAL: PAPER_TRADING is set to True by default to protect capital
 # ============================================================================
 # BOT IDENTIFICATION (Isolation for Multi-Bot setup)
 # ============================================================================
-BOT_ID = "ReisBot"  # Unique ID for this instance
+BOT_ID = "GhostAgent"  # Unique ID for this instance
 BOT_PID_FILE = f"bot_{BOT_ID}.pid"
 BOT_LOCK_FILE = f"bot_{BOT_ID}.lock"
 WEB_UI_PORT = 5566  # Changed from 5555 to avoid conflicts
@@ -36,10 +36,17 @@ PAPER_TRADING = user_settings.get('paper_trading', False)  # MAINNET MODE - GER�
 # ============================================================================
 
 # Aktif exchange ("grvt", "pacifica", "reya", "paradex")
-ACTIVE_EXCHANGE = user_settings.get('exchange', "grvt") 
+ACTIVE_EXCHANGE = user_settings.get('exchange', "solana") 
 
 # Exchange-specific configurations
 EXCHANGE_CONFIGS = {
+    "solana": {
+        "api_key": "4DtyLwP3GUPjD4updx4QMdr4XZtN8QUNt8kbcd4svGhG",
+        "api_secret": "BNU2jJcdPE7pxttsQu7kNzKQKLFVB2chAWsG3p6PUJCg",
+        "testnet": True,
+        "fee_percent": 0.01,
+        "leverage": 1
+    },
     "grvt": {
         "api_key": user_settings.get('api_key', "REDACTED - USE settings.json"),
         "private_key": user_settings.get('secret_key', "REDACTED - USE settings.json"),
@@ -98,7 +105,7 @@ CHECK_INTERVAL_SECONDS = 1  # Her saniye kontrol (Maksimum HFT hızı)
 
 # --- RISK SAFETY LIMITS (ULTRATHINK) ---
 INITIAL_BALANCE_USD = float(user_settings.get('initial_balance', 100.0))  # Reference for scaling
-REIS_AUTO_SCALE_ENABLED = user_settings.get('auto_scale', False) # Dynamic scaling toggle
+GHOST_AUTO_SCALE_ENABLED = user_settings.get('auto_scale', False) # Dynamic scaling toggle
 SAFETY_MAX_POSITION_USD_MULTIPLIER = 1.25 # Reject positions > (MAX_TRADE_SIZE * LEVERAGE * 1.25)
 HARD_SAFETY_USD_MARGIN_MAX = 500.0  # UNIVERSAL CEILING: No trade can ever use more than $500 margin
 
@@ -168,7 +175,7 @@ VOLUME_SYMBOLS = [
 ]
 # Add more symbols as needed
 
-# Trading pairs - Multi-symbol support (Toplam 13 parite)
+# Trading pairs - Multi-symbol support (Toplam 13 token pairs)
 # CRITICAL FIX: user_settings'i sadece LAYER_MODE kapalıysa kullan
 if LAYER_MODE:
     SYMBOLS = QUALITY_SYMBOLS + VOLUME_SYMBOLS
@@ -298,23 +305,23 @@ VOLUME_THRESHOLD_MULTIPLIER = 1.2  # Volume divergence check active
 # Maximum positions & daily limits
 MAX_OPEN_POSITIONS = 15              # Total positions
 MAX_SAME_DIRECTION_POSITIONS = 10    # Same direction (LONG or SHORT)
-MAX_ACCOUNT_EXPOSURE_PERCENT = 100.0 # Reis Stratejisi: Kasa kısıtlaması yok
+MAX_ACCOUNT_EXPOSURE_PERCENT = 100.0 # Ghost Stratejisi: Kasa kısıtlaması yok
 MAX_DAILY_TRADES = 1000               
-MAX_DAILY_LOSS_PERCENT = 100.0       # Reis Stratejisi: Günlük stop yok (Recovery mod)
+MAX_DAILY_LOSS_PERCENT = 100.0       # Ghost Stratejisi: Günlük stop yok (Recovery mod)
 
 # --- STRATEGY RISK MANAGEMENT (FIXED USD MODE) ---
-REIS_INITIAL_MARGIN_USD = 10.0       # Initial entry margin
-REIS_LAYER_1_MARGIN_USD = 10.0       # Layer 1 margin
-REIS_LAYER_2_MARGIN_USD = 10.0       # Layer 2 margin
-REIS_LAYER_3_MARGIN_USD = 10.0       # Layer 3 margin
+GHOST_INITIAL_MARGIN_USD = 10.0       # Initial entry margin
+GHOST_LAYER_1_MARGIN_USD = 10.0       # Layer 1 margin
+GHOST_LAYER_2_MARGIN_USD = 10.0       # Layer 2 margin
+GHOST_LAYER_3_MARGIN_USD = 10.0       # Layer 3 margin
 
-REIS_TP_PCT = 1.5          # Take Profit target
-REIS_SL_PCT = 5.0          # Hard Stop Loss
-USE_REIS_TREND_FILTER = True # Enable trend check
+GHOST_TP_PCT = 1.5          # Take Profit target
+GHOST_SL_PCT = 5.0          # Hard Stop Loss
+USE_GHOST_TREND_FILTER = True # Enable trend check
 SR_WINDOW = 5              # Candle window for fractals
 SR_SENSITIVITY = 0.005     # Sensitivity
-KADEME_THRESHOLD_PCT = 3.0        # DCA trigger distance
-MAX_KADEME_COUNT = 3       # Max DCA layers
+TIER_THRESHOLD_PCT = 3.0        # DCA trigger distance
+MAX_TIER_COUNT = 3       # Max DCA layers
 RSI_OVERSOLD = 30          # Oversold threshold
 RSI_OVERBOUGHT = 70
 
@@ -370,7 +377,7 @@ VOLUME_THROTTLE_LEVELS = {
     2: 0.0     # Durdur
 }
 
-# Mode-specific exposure budgets (Unlimited for Reis Strategy)
+# Mode-specific exposure budgets (Unlimited for Ghost Strategy)
 PROFIT_CORE_MAX_EXPOSURE_PCT = 100.0   
 VOLUME_SIDECAR_MAX_EXPOSURE_PCT = 100.0
 
@@ -439,7 +446,7 @@ LAYER_PARAMS = {
 
 TIER_PARAMS = {
     'tier1': {
-        'name': 'REIS Professional Trading',
+        'name': 'GHOST Professional Trading',
         'symbols': ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XRP/USDT', 'LINK/USDT', 'AVAX/USDT', 'SUI/USDT', 'AAVE/USDT', 'UNI/USDT', 'OP/USDT', 'ARB/USDT', 'TON/USDT', 'JUP/USDT'],
         
         # Universal parameters for all symbols
@@ -460,7 +467,7 @@ TIER_PARAMS = {
         'max_spread_bps': 10,
         'MAX_ATR_PERCENT': 5.0,
         
-        # REIS Layering Strategy - Global (TP %1, SL %8)
+        # GHOST Layering Strategy - Global (TP %1, SL %8)
         'tp_percent': 1.0,
         'sl_percent': 8.0,
         'TRAILING_STOP_ACTIVATION': 0.6,
@@ -481,11 +488,11 @@ TIER_PARAMS = {
         'use_ema_filter': True,
         'MIN_MOMENTUM_THRESHOLD': None,
         'require_volume_spike': False,
-        'description': 'REIS Professional: Single-tier, global config. TP %1 SL %8 for 4-layer recovery'
+        'description': 'GHOST Professional: Single-tier, global config. TP %1 SL %8 for 4-layer recovery'
     },
     
     'tier2': {
-        'name': 'REIS Professional Trading (Fallback)',
+        'name': 'GHOST Professional Trading (Fallback)',
         'symbols': [],
         
         # Same as tier1
@@ -522,11 +529,11 @@ TIER_PARAMS = {
         'use_ema_filter': True,
         'MIN_MOMENTUM_THRESHOLD': None,
         'require_volume_spike': False,
-        'description': 'REIS Professional: Identical to tier1'
+        'description': 'GHOST Professional: Identical to tier1'
     },
     
     'tier3': {
-        'name': 'REIS Professional Trading (Fallback)',
+        'name': 'GHOST Professional Trading (Fallback)',
         'symbols': [],
         
         # Same as tier1
@@ -563,7 +570,7 @@ TIER_PARAMS = {
         'use_ema_filter': True,
         'MIN_MOMENTUM_THRESHOLD': None,
         'require_volume_spike': False,
-        'description': 'REIS Professional: Identical to tier1'
+        'description': 'GHOST Professional: Identical to tier1'
     }
 }
 

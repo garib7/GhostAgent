@@ -179,10 +179,10 @@ class MicroSpreadScalperMaker:
         return StrategyDecision(TradeAction.NONE, symbol, self.strategy_id, self.mode, OrderIntent.MAKER)
 
 
-class ReisReversionStrategy:
-    """Reis Strategy: Fade H4/H1 S/R levels with RSI extremes."""
+class GhostReversionStrategy:
+    """Ghost Strategy: Fade H4/H1 S/R levels with RSI extremes."""
     def __init__(self):
-        self.strategy_id = "ReisStrategy"
+        self.strategy_id = "GhostStrategy"
         self.mode = StrategyMode.PROFIT_CORE
 
     def generate_decision(self, df: pd.DataFrame, symbol: str, trend_df: pd.DataFrame = None) -> StrategyDecision:
@@ -200,7 +200,7 @@ class ReisReversionStrategy:
         # 🔧 TREND FILTER (EMA 200 on 15m)
         trend_ok_long = True
         trend_ok_short = True
-        if config.USE_REIS_TREND_FILTER and trend_df is not None and len(trend_df) >= 200:
+        if config.USE_GHOST_TREND_FILTER and trend_df is not None and len(trend_df) >= 200:
             trend_ema = indicators.calculate_ema(trend_df, 200).iloc[-1]
             trend_price = trend_df.iloc[-1]['close']
             trend_ok_long = trend_price > trend_ema   # Only BUY if price > EMA200
@@ -215,10 +215,10 @@ class ReisReversionStrategy:
                         symbol=symbol,
                         strategy_id=self.strategy_id,
                         mode=self.mode,
-                        order_intent=OrderIntent.TAKER, # Reis often enters at market for snipes
-                        tp_profile={'percent': config.REIS_TP_PCT},
-                        sl_profile={'percent': config.REIS_SL_PCT},
-                        reason=f"REIS_SUPPORT: Price={price:.4f} Level={level:.4f} RSI={rsi:.1f} (TREND_UP)"
+                        order_intent=OrderIntent.TAKER, # Ghost often enters at market for snipes
+                        tp_profile={'percent': config.GHOST_TP_PCT},
+                        sl_profile={'percent': config.GHOST_SL_PCT},
+                        reason=f"GHOST_SUPPORT: Price={price:.4f} Level={level:.4f} RSI={rsi:.1f} (TREND_UP)"
                     )
                 elif rsi >= config.RSI_OVERBOUGHT and price < level and trend_ok_short: # Reject from resistance
                     return StrategyDecision(
@@ -227,9 +227,9 @@ class ReisReversionStrategy:
                         strategy_id=self.strategy_id,
                         mode=self.mode,
                         order_intent=OrderIntent.TAKER,
-                        tp_profile={'percent': config.REIS_TP_PCT},
-                        sl_profile={'percent': config.REIS_SL_PCT},
-                        reason=f"REIS_RESISTANCE: Price={price:.4f} Level={level:.4f} RSI={rsi:.1f} (TREND_DOWN)"
+                        tp_profile={'percent': config.GHOST_TP_PCT},
+                        sl_profile={'percent': config.GHOST_SL_PCT},
+                        reason=f"GHOST_RESISTANCE: Price={price:.4f} Level={level:.4f} RSI={rsi:.1f} (TREND_DOWN)"
                     )
         
         return StrategyDecision(TradeAction.NONE, symbol, self.strategy_id, self.mode, OrderIntent.TAKER)
@@ -237,8 +237,8 @@ class ReisReversionStrategy:
 
 class StrategyRouter:
     def __init__(self):
-        # Insert ReisStrategy as the primary selective strategy
-        self.profit_strategies = [ReisReversionStrategy(), LiquiditySweepFade(), MomentumBreakout()]
+        # Insert GhostStrategy as the primary selective strategy
+        self.profit_strategies = [GhostReversionStrategy(), LiquiditySweepFade(), MomentumBreakout()]
         # DISABLED: MicroSpreadScalperMaker fallback removed for better selectivity
         # self.volume_strategy = MicroSpreadScalperMaker()
         
@@ -296,7 +296,7 @@ class StrategyRouter:
         # Get 1m RSI for MTF check
         rsi_1m = df.iloc[-1].get('rsi', 50) if len(df) > 0 else 50
         
-        # Try profit strategies in order (ReisReversion -> SweepFade -> Momentum)
+        # Try profit strategies in order (GhostReversion -> SweepFade -> Momentum)
         for strat in self.profit_strategies:
             decision = strat.generate_decision(df, symbol, trend_df)
             if decision.action != TradeAction.NONE:
@@ -310,3 +310,18 @@ class StrategyRouter:
         # NO FALLBACK - Return NONE if no profit strategy signals
         # (MicroSpreadScalperMaker disabled for better selectivity)
         return StrategyDecision(TradeAction.NONE, symbol, "NoSignal", StrategyMode.PROFIT_CORE, OrderIntent.TAKER)
+
+    def add_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Mock version of adding indicators for Hackathon GhostAgent Demo."""
+        import random
+        # Create mock indicators directly in dataframe to simulate real strategy logic
+        df['rsi'] = [random.uniform(20, 80) for _ in range(len(df))]
+        df['bb_lower'] = df['close'] * 0.98
+        df['bb_upper'] = df['close'] * 1.02
+        df['bb_width'] = (df['bb_upper'] - df['bb_lower']) / df['close']
+        df['ema'] = df['close'] * random.uniform(0.99, 1.01)
+        df['ema_21'] = df['close'] * random.uniform(0.98, 1.02)
+        df['volume_sma'] = df['volume'] * random.uniform(0.8, 1.2)
+        df['is_bullish'] = df['ema'] > df['ema_21']
+        df['adx'] = [random.uniform(10, 50) for _ in range(len(df))]
+        return df

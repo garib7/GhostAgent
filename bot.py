@@ -24,7 +24,7 @@ from typing import Optional, Dict, List
 import config
 import indicators
 from risk_manager import RiskManager
-from strategy import ScalpingStrategy
+from strategy_router import StrategyRouter
 from exchanges.exchange_factory import ExchangeFactory
 
 import os
@@ -136,7 +136,7 @@ class CryptoScalpingBot:
         """
         self._check_single_instance()
         # Exchange setup
-        self.exchange_name = exchange_name or config.ACTIVE_EXCHANGE
+        self.exchange_name = "solana"
         exchange_config = config.EXCHANGE_CONFIGS.get(self.exchange_name)
         
         if not exchange_config:
@@ -144,15 +144,17 @@ class CryptoScalpingBot:
             raise ValueError(f"❌ Exchange config bulunamadı: {self.exchange_name}")
         
         # Exchange adapter oluştur
-        self.exchange_adapter = ExchangeFactory.create(
+        self.exchange_adapter = ExchangeFactory.create_exchange(
             self.exchange_name,
-            exchange_config
+            exchange_config.get("api_key", "demo_key"),
+            exchange_config.get("api_secret", "demo_secret"),
+            exchange_config.get("testnet", True)
         )
         
         # Components
         self.risk_manager = RiskManager()
         self.risk_manager.exchange_adapter = self.exchange_adapter # Link for real balance sync
-        self.strategy = ScalpingStrategy()
+        self.strategy = StrategyRouter()
         
         # Telemetry data storage
         self.latest_metrics = {} # symbol -> {rsi, bb_pos, price}
@@ -205,7 +207,7 @@ class CryptoScalpingBot:
                             self.exchange_adapter.cancel_order(oid, sym)
                         self.risk_manager.duplicate_ids_to_cancel = []
             except Exception as e:
-                print(f"⚠️ Senkronizasyon hatası: {e}")
+                print(f"⚠️ Senkronizasyon fault: {e}")
             
             # 🔧 FIX: Sync daily_equity_start with REAL balance (prevents %99 DD false trigger)
             real_balance = self.risk_manager.get_balance()
@@ -223,17 +225,26 @@ class CryptoScalpingBot:
     # DATA FETCHING
     # ========================================================================
     
-    def fetch_ohlcv_data(self, limit: int = 300) -> Optional[pd.DataFrame]:
+    def fetch_ohlcv_data(self, limit: int = 300, symbol: str = None) -> getattr(pd, 'DataFrame'):
         """
-        REST API ile OHLCV verilerini çek (historical)
+        REST API ile OHLCV verilerini çekip DataFrame'e çevirir (GhostAgent Fix)
         """
-        return self.exchange_adapter.fetch_ohlcv(
-            config.SYMBOL,
-            config.TIMEFRAME,
-            limit
-        )
-    
-    async def get_realtime_price(self) -> Optional[float]:
+        import pandas as pd
+        sym = symbol or getattr(self, 'ghost_token', "SOL/USDT")
+        data = self.exchange_adapter.fetch_ohlcv(sym, "1m", limit)
+        if isinstance(data, list) and len(data) > 0:
+            try:
+                df = pd.DataFrame(data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+                # Float casting just in case
+                for col in ['open', 'high', 'low', 'close', 'volume']:
+                    df[col] = df[col].astype(float)
+                return df
+            except Exception as e:
+                # Fallback return none on internal structure fault
+                return None
+        return None
+
+    async def get_realtime_price(self) -> getattr(typing, 'Optional', type(None)):
         """
         WebSocket ile anlık fiyat al
         """
@@ -242,7 +253,7 @@ class CryptoScalpingBot:
             if ticker:
                 return ticker['last']
         except Exception as e:
-            print(f"⚠️  Fiyat okuma hatası: {e}")
+            print(f"⚠️  Fiyat okuma fault: {e}")
         return None
     
     # ========================================================================
@@ -283,7 +294,7 @@ class CryptoScalpingBot:
                     current_price,
                     position['position_size']
                 ):
-                    print(f"\n💰 Karlı SAT fırsatı - Pozisyon kapatılıyor...")
+                    print(f"\n💰 Karlı SAT fırsatı - Pozisyon terminating...")
                     self.risk_manager.close_position(
                         position,
                         current_price,
@@ -379,7 +390,7 @@ class CryptoScalpingBot:
             print("\n\n⏸️  Bot durduruluyor... (Ctrl+C algılandı)")
             await self.shutdown()
         except Exception as e:
-            print(f"\n❌ WebSocket hatası: {e}")
+            print(f"\n❌ WebSocket fault: {e}")
             import traceback
             traceback.print_exc()
             await self.shutdown()
@@ -388,7 +399,7 @@ class CryptoScalpingBot:
         """
         REST API modunda çalıştır - OPTİMİZE EDİLMİŞ MULTI-SYMBOL
         """
-        print("\n🔄 REST HFT Modu - Aktif Tarama başlatılıyor...\n")
+        print("\n🔄 REST HFT Protocol - Active Telemetry Scanning initiated...\n")
         self.running = True
         
         while self.running:
@@ -412,7 +423,7 @@ class CryptoScalpingBot:
                     print(f"🔍 [DEBUG] Exchange Reported Positions: {[p['symbol'] for p in exchange_positions]}")
                 
                 # Heartbeat
-                print(f"\n💓 [HAYATTA] {datetime.now().strftime('%H:%M:%S')} | Döngü: {self.iteration_count} | Aktif: {len(self.risk_manager.positions)}")
+                print(f"\n💓 [HEARTBEAT] {datetime.now().strftime('%H:%M:%S')} | Cycle: {self.iteration_count} | Active: {len(self.risk_manager.positions)}")
                 
                 # 🚨 EMERGENCY CLOSE CHECK (From Web UI)
                 if getattr(self, 'emergency_close_triggered', False):
@@ -452,29 +463,35 @@ class CryptoScalpingBot:
                 
                 # Tüm sembolleri tek bir geçişte işle
                 if self.iteration_count % 10 == 0:
-                    print(f"🔍 [{datetime.now().strftime('%H:%M:%S')}] İşlenen sembol sayısı: {len(config.ALL_TIER_SYMBOLS)} {config.ALL_TIER_SYMBOLS}")
+                    print(f"🔍 [{datetime.now().strftime('%H:%M:%S')}] Routings processed: {len(config.ALL_TIER_SYMBOLS)} {config.ALL_TIER_SYMBOLS}")
                 
                 for symbol in config.ALL_TIER_SYMBOLS:
                     try:
                         # 0. Progress tracking (Less verbose)
                         if self.iteration_count % 5 == 0:
-                            print(f"   🔎 [{symbol}] Taranıyor...")
+                            print(f"   🔎 [{symbol}] Analyzing Liquidity...")
                             
                         # 1. Mum Verisi ve Göstergeleri Al (Multi-TF)
-                        df = self.exchange_adapter.fetch_ohlcv(symbol, config.TIMEFRAME, limit=100)
-                        trend_df = self.exchange_adapter.fetch_ohlcv(symbol, config.TREND_TIMEFRAME, limit=100)
+                        import pandas as pd
+                        _raw = self.exchange_adapter.fetch_ohlcv(symbol, config.TIMEFRAME, limit=100)
+                        _raw_trend = self.exchange_adapter.fetch_ohlcv(symbol, config.TREND_TIMEFRAME, limit=100)
+
+                        df = pd.DataFrame(_raw, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume']) if isinstance(_raw, list) else _raw
+                        trend_df = pd.DataFrame(_raw_trend, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume']) if isinstance(_raw_trend, list) else _raw_trend
                         
                         # 🔍 MTF RSI: Fetch 5m data for confirmation
                         mtf_df = None
                         if getattr(config, 'USE_MTF_RSI_CONFIRMATION', False):
                             mtf_timeframe = getattr(config, 'MTF_TIMEFRAME', '5m')
-                            mtf_df = self.exchange_adapter.fetch_ohlcv(symbol, mtf_timeframe, limit=50)
+                            _raw_mtf = self.exchange_adapter.fetch_ohlcv(symbol, mtf_timeframe, limit=50)
+                            mtf_df = pd.DataFrame(_raw_mtf, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume']) if isinstance(_raw_mtf, list) else _raw_mtf
+
                             if mtf_df is not None and len(mtf_df) >= 14:
                                 mtf_df = self.strategy.add_indicators(mtf_df)
                                 mtf_rsi = mtf_df.iloc[-1].get('rsi', 50)
                                 # Cache to strategy router
-                                self.strategy.router.set_mtf_rsi(symbol, mtf_rsi)
-                        
+                                self.strategy.set_mtf_rsi(symbol, mtf_rsi)
+
                         if df is None or len(df) < 30:
                             if self.iteration_count % 5 == 0:
                                 print(f"   ⚠️ [{symbol}] Veri yetersiz (len: {len(df) if df is not None else 'None'})")
@@ -488,7 +505,7 @@ class CryptoScalpingBot:
                         if trend_df is not None and not trend_df.empty:
                             trend_df = self.strategy.add_indicators(trend_df)
                         
-                        # 🔍 EXTRA: REIS S/R LEVELS
+                        # 🔍 EXTRA: GHOST S/R LEVELS
                         df_f = indicators.calculate_fractals(df, config.SR_WINDOW)
                         sr_levels = indicators.extract_sr_levels(df_f, config.SR_SENSITIVITY)
                         
@@ -510,9 +527,8 @@ class CryptoScalpingBot:
                             print(f"   ⚠️ [{symbol}] Metric storage error: {e}")
                         
                         # 🔍 HMR ANALİZ
-                        buy_sig = self.strategy.check_buy_signal(df, symbol=symbol, trend_df=trend_df)
-                        sell_sig = self.strategy.check_sell_entry_signal(df, symbol=symbol, trend_df=trend_df)
-                        
+                        decision = self.strategy.route(df, symbol, trend_df)
+
                         last_row = df.iloc[-1]
                         rsi = float(last_row.get('rsi', 50))
                         
@@ -595,15 +611,12 @@ class CryptoScalpingBot:
                             cooldown_remaining = config.TRADE_COOLDOWN_SECONDS - (time.time() - self.risk_manager.cooldowns.get(symbol, 0))
                             if not position and self.risk_manager.can_open_new_position(symbol) and cooldown_remaining <= 0:
                                 # ULTRATHINK: Check BOTH buy and sell signals
-                                buy_sig = self.strategy.check_buy_signal(df, symbol, trend_df)
-                                sell_sig = self.strategy.check_sell_entry_signal(df, symbol, trend_df)
-                                
-                                current_sig = buy_sig if buy_sig['signal'] else sell_sig
-                                if current_sig['signal']:
-                                    mode = "BUY" if buy_sig['signal'] else "SELL"
-                                    decision = current_sig.get('decision')
-                                    
-                                    print(f"   🚀 HMR SİNYALİ [{symbol}] ({mode}): {current_sig['reason']}")
+                                decision = self.strategy.route(df, symbol, trend_df)
+
+                                if decision.action.value != "NONE":
+                                    mode = decision.action.value
+
+                                    print(f"   🚀 HMR SİNYALİ [{symbol}] ({mode}): {decision.reason}")
                                     
                                     # Calc size with decision metadata
                                     amount = self.risk_manager.calculate_position_size(current_price, direction=mode, symbol=symbol, decision=decision)
@@ -613,7 +626,7 @@ class CryptoScalpingBot:
 
                                     # CRITICAL SAFETY GATE: Final Size Validation
                                     pos_value_usd = current_price * amount
-                                    max_safety_val = 5000.0 # Hard global safety cap for REIS strategy
+                                    max_safety_val = 5000.0 # Hard global safety cap for GHOST strategy
                                     
                                     if pos_value_usd > max_safety_val:
                                         print(f"🚨 [BOT_GATE] ABORTING Order for {symbol}: Value ${pos_value_usd:.2f} exceeds safety cap ${max_safety_val:.2f}")
@@ -787,7 +800,9 @@ class CryptoScalpingBot:
                                     print(f"   👀 [{symbol}] İzleniyor... Mode: {market_mode} | RSI: {rsi:.1f} | ADX: {adx:.1f}")
                                         
                     except Exception as e:
-                        print(f"   ⚠️  {symbol} hatası: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        print(f"   ⚠️  {symbol} fault: {e}")
                 
                 # 📊 MANAGE OPEN POSITIONS (TP/SL Repair, Layering, Trim)
                 # Uses prices collected during symbol scanning above
@@ -818,7 +833,7 @@ class CryptoScalpingBot:
                 await self.shutdown()
                 break
             except Exception as e:
-                print(f"\n❌ Beklenmeyen hata: {e}")
+                print(f"\n❌ Unexpected Fatal Error: {e}")
                 import traceback
                 traceback.print_exc()
                 await asyncio.sleep(10) # Cooldown on fatal error
@@ -853,63 +868,63 @@ class CryptoScalpingBot:
     # ========================================================================
     
     def print_status_header(self):
-        """ReisBot Pro Başlangıç Banner'ı"""
+        """GhostAgent Pro Başlangıç Banner'ı"""
         print("\n" + "="*70)
-        print("🚀 REISBOT PRO - ADVANCED HFT SCALPING SYSTEM")
+        print("🚀 GHOSTAGENT EXECUTION PROTOCOL - ADVANCED HFT SCALPING SYSTEM")
         print("="*70)
         
         if config.PAPER_TRADING:
-            print("⚠️  PAPER TRADING MODU AKTİF - GERÇEK PARA RİSKİ YOK")
-            print(f"💵 Sanal Bakiye: ${config.INITIAL_BALANCE_USD:.2f}")
+            print("⚠️  SIMULATION MODE ACTIVE - NO REAL CAPITAL RISK")
+            print(f"💵 Virtual TVL: ${config.INITIAL_BALANCE_USD:.2f}")
         else:
             print("🔴 GERÇEK PARA MODU - DİKKATLİ OLUN!")
             print("💰 Live Trading Aktif - Gerçek bakiye kullanılacak")
         
         print(f"\n📊 Exchange: {self.exchange_adapter.name}")
-        print(f"🔌 Mod: {'WebSocket (Gerçek Zamanlı)' if config.USE_WEBSOCKET else 'REST API (Periyodik)'}")
+        print(f"🔌 Execution Mode: {'WebSocket (Gerçek Zamanlı)' if config.USE_WEBSOCKET else 'REST API (Periyodik)'}")
         
-        # Reis HFT Katmanları
-        print(f"\n🎯 Sistem: ReisBot Pro HFT Katmanları")
+        # Ghost HFT Tiers
+        print(f"\n🎯 Architecture: GhostAgent Pro HFT Tiers")
         
         tier1_symbols = config.TIER_PARAMS['tier1']['symbols']
         tier2_symbols = config.TIER_PARAMS['tier2']['symbols']
         tier3_symbols = config.TIER_PARAMS['tier3']['symbols']
         
-        print(f"   💎 Kademe 1 (Premium): {len(tier1_symbols)} parite - Max Hacim + En sıkı kriterler")
+        print(f"   💎 Tier 1 (Premium): {len(tier1_symbols)} token pairs - Max Volume + Strictest Criteria")
         print(f"       {', '.join(tier1_symbols)}")
-        print(f"   ⚡ Kademe 2 (Standard): {len(tier2_symbols)} parite - Dengeli likidite")
+        print(f"   ⚡ Tier 2 (Standard): {len(tier2_symbols)} token pairs - Balanced Liquidity")
         print(f"       {', '.join(tier2_symbols)}")
-        print(f"   🛡️ Kademe 3 (Aggressive): {len(tier3_symbols)} parite - Toxic korunmalı pariteler")
+        print(f"   🛡️ Tier 3 (Aggressive): {len(tier3_symbols)} token pairs - Toxic Flow Protected Pools")
         print(f"       {', '.join(tier3_symbols)}")
         
         # Detaylı Strateji Parametreleri
         print(f"\n{'='*70}")
-        print("📋 REIS HFT STRATEJI PARAMETRELERI")
+        print("📋 GHOST HFT STRATEGY PARAMETERS")
         print(f"{'='*70}")
         
         # Tier 1 (Premium)
         tier1_params = config.TIER_PARAMS['tier1']
-        print(f"\n💎 KADEME 1 - PREMIUM:")
-        print(f"   • RSI Aşırı Satım: < {tier1_params['rsi_oversold']} | Aşırı Alım: > {tier1_params['rsi_overbought']}")
-        print(f"   • EMA Filtresi: {'✅ AKTİF' if tier1_params.get('use_ema_filter') else '❌ KAPALI'}")
+        print(f"\n💎 TIER 1 - PREMIUM:")
+        print(f"   • RSI Oversold: < {tier1_params['rsi_oversold']} | Overbought: > {tier1_params['rsi_overbought']}")
+        print(f"   • EMA Filter: {'✅ ACTIVE' if tier1_params.get('use_ema_filter') else '❌ KAPALI'}")
         print(f"   • BB Tolerance: %{tier1_params['bb_tolerance']*100:.1f} | Min BB Width: %{tier1_params['min_bb_width']:.2f}")
         print(f"   • Max Spread: {tier1_params['max_spread_bps']}bps")
         print(f"   • TP: %{tier1_params['tp_percent']} | SL: %{tier1_params['sl_percent']}")
         
         # Tier 2 (Standard)
         tier2_params = config.TIER_PARAMS['tier2']
-        print(f"\n⚡ KADEME 2 - STANDARD:")
-        print(f"   • RSI Aşırı Satım: < {tier2_params['rsi_oversold']} | Aşırı Alım: > {tier2_params['rsi_overbought']}")
-        print(f"   • EMA Filtresi: {'✅ AKTİF' if tier2_params.get('use_ema_filter') else '❌ KAPALI'}")
+        print(f"\n⚡ TIER 2 - STANDARD:")
+        print(f"   • RSI Oversold: < {tier2_params['rsi_oversold']} | Overbought: > {tier2_params['rsi_overbought']}")
+        print(f"   • EMA Filter: {'✅ ACTIVE' if tier2_params.get('use_ema_filter') else '❌ KAPALI'}")
         print(f"   • BB Tolerance: %{tier2_params['bb_tolerance']*100:.1f} | Min BB Width: %{tier2_params['min_bb_width']:.2f}")
         print(f"   • Max Spread: {tier2_params['max_spread_bps']}bps")
         print(f"   • TP: %{tier2_params['tp_percent']} | SL: %{tier2_params['sl_percent']}")
         
         # Tier 3 (Aggressive + Protection)
         tier3_params = config.TIER_PARAMS['tier3']
-        print(f"\n🛡️ KADEME 3 - AGGRESSIVE:")
-        print(f"   • RSI Aşırı Satım: < {tier3_params['rsi_oversold']} | Aşırı Alım: > {tier3_params['rsi_overbought']}")
-        print(f"   • EMA Filtresi: {'✅ AKTİF' if tier3_params.get('use_ema_filter') else '❌ KAPALI'}")
+        print(f"\n🛡️ TIER 3 - AGGRESSIVE:")
+        print(f"   • RSI Oversold: < {tier3_params['rsi_oversold']} | Overbought: > {tier3_params['rsi_overbought']}")
+        print(f"   • EMA Filter: {'✅ ACTIVE' if tier3_params.get('use_ema_filter') else '❌ KAPALI'}")
         print(f"   • BB Tolerance: %{tier3_params['bb_tolerance']*100:.1f} | Min BB Width: %{tier3_params['min_bb_width']:.2f}")
         print(f"   • Max Spread: {tier3_params['max_spread_bps']}bps")
         print(f"   • ⚠️ Momentum Gate: > {tier3_params.get('MIN_MOMENTUM_THRESHOLD', 0)}%")
@@ -918,7 +933,7 @@ class CryptoScalpingBot:
         
         # Risk Yönetimi
         print(f"\n{'='*70}")
-        print("🛡️  RİSK YÖNETİMİ & KURTARMA (RECOVERY) PARAMETRELERİ")
+        print("🛡️  RISK MANAGEMENT & DYNAMIC DCA SETTINGS")
         print(f"{'='*70}")
         
         # Tier bazlı ortalama değerler
@@ -927,33 +942,33 @@ class CryptoScalpingBot:
         print(f"   • Target Profit (TP): Tier 1 %{tier1_params['tp_percent']} | Tier 2 %{tier2_params['tp_percent']} | Tier 3 %{tier3_params['tp_percent']} (Avg: %{avg_tp:.2f})")
         print(f"   • Stop Loss (SL):     Tier 1 %{tier1_params['sl_percent']} | Tier 2 %{tier2_params['sl_percent']} | Tier 3 %{tier3_params['sl_percent']} (Avg: %{avg_sl:.2f})")
 
-        print(f"   • 🛡️ Break-Even: %0.6 karda Giriş Fiyatına (BE) Çekilir")
-        print(f"   • ⏳ Delayed Trailing: %0.5 kardan sonra takip başlar")
-        print(f"   • 🕸️ Korelasyon Sınırı: Aynı yönde max {getattr(config, 'MAX_SAME_DIRECTION_POSITIONS', 10)} pozisyon")
-        print(f"   • 🏗️ Kasa Kullanımı: Kısıtlamasız (%100)")
-        print(f"   • 🚨 Circuit Breaker: Devre Dışı (Recovery Mod)")
+        print(f"   • 🛡️ Break-Even: %0.6 profit triggers Break-Even (BE) lock")
+        print(f"   • ⏳ Delayed Trailing: %0.5 profit triggers Ghost TTP trailing")
+        print(f"   • 🕸️ Correlation Cap: Max unidirectional {getattr(config, 'MAX_SAME_DIRECTION_POSITIONS', 10)} pozisyon")
+        print(f"   • 🏗️ Capital Utilization: Unrestricted (%100)")
+        print(f"   • 🚨 Circuit Breaker: DISABLED (Recovery Mod)")
         
         # Pozisyon Ayarları
         print(f"\n{'='*70}")
-        print("💼 REIS STRATEJI - POZISYON AYARLARI")
+        print("💼 GHOST STRATEGY - POSITION SIZING LOGIC")
         print(f"{'='*70}")
         current_bal = self.risk_manager.get_balance()
-        print(f"   • İlk Giriş (Initial): %{getattr(config, 'REIS_INITIAL_ENTRY_PCT', 10.0)} (~${current_bal * getattr(config, 'REIS_INITIAL_ENTRY_PCT', 10.0) / 100:.2f})")
-        print(f"   • Kademe 2 (Recovery): %{getattr(config, 'REIS_LAYER_SMALL_PCT', 5.0)}")
-        print(f"   • Kademe 3+ (Aggressive): %{getattr(config, 'REIS_LAYER_LARGE_PCT', 10.0)}")
-        print(f"   • Ortalama Düşürme Aralığı: %{getattr(config, 'KADEME_THRESHOLD_PCT', 2.0)} (Fiyat mesafesi)")
-        print(f"   • Kaldıraç (Leverage): {config.LEVERAGE}x")
-        print(f"   • Max Açık Parite: {config.MAX_OPEN_POSITIONS}")
+        print(f"   • Initial Entry: %{getattr(config, 'GHOST_INITIAL_ENTRY_PCT', 10.0)} (~${current_bal * getattr(config, 'GHOST_INITIAL_ENTRY_PCT', 10.0) / 100:.2f})")
+        print(f"   • Tier 2 (Recovery): %{getattr(config, 'GHOST_LAYER_SMALL_PCT', 5.0)}")
+        print(f"   • Tier 3+ (Aggressive): %{getattr(config, 'GHOST_LAYER_LARGE_PCT', 10.0)}")
+        print(f"   • DCA Distance: %{getattr(config, 'TIER_THRESHOLD_PCT', 2.0)} (Price delta)")
+        print(f"   • Leverage Multiplier: {config.LEVERAGE}x")
+        print(f"   • Max Concurrent Routs: {config.MAX_OPEN_POSITIONS}")
         print(f"   • Trading Fee: %{config.TRADING_FEE_PERCENT}")
         
         # Kaldıraç Uyarısı
-        print(f"\n⚠️  KALDIRAÇ UYARISI:")
-        print(f"   Bot kaldıracı otomatik ayarlayamaz!")
-        print(f"   Lütfen GRVT exchange UI'dan kaldıracı manuel olarak {config.LEVERAGE}x yapın.")
-        print(f"   Her sembol için ayrı ayrı ayarlanmalı!")
+        print(f"\n⚠️  LEVERAGE MISMATCH WARNING:")
+        print(f"   GhostAgent enforces logic, not UI leverage!")
+        print(f"   Configure leverage manually on Pacifica UI to {config.LEVERAGE}x yapın.")
+        print(f"   Must be set identically per token pool!")
         
         print(f"\n{'='*70}")
-        print("\n🔄 Bot başlatılıyor... (Durdurmak için Ctrl+C basın)\n")
+        print("\n🔄 GhostEngine initiating... (Press Ctrl+C to abort sequence)\n")
     
     async def shutdown(self):
         """Bot'u düzgün şekilde kapat"""
@@ -966,7 +981,7 @@ class CryptoScalpingBot:
             
             # WebSocket kapat
             if self.exchange_adapter.ws_active:
-                print("📡 WebSocket bağlantısı kapatılıyor...")
+                print("📡 WebSocket bağlantısı terminating...")
                 await self.exchange_adapter.close_websocket()
             
             # Açık pozisyonları kapat (Paper Trading)
@@ -999,7 +1014,7 @@ class CryptoScalpingBot:
         finally:
             # PID/LOCK Dosyasını TEMİZLE (EN KRİTİK ADIM)
             self._remove_pid_file()
-            print("\n✅ Bot güvenle kapatıldı. Görüşmek üzere! 👋\n")
+            print("\n✅ Agent safely terminated. Ghost nodes offline. 👋\n")
     
     def get_micro_momentum(self, symbol: str, df: pd.DataFrame) -> float:
         """
@@ -1093,7 +1108,7 @@ class CryptoScalpingBot:
 
     async def close_all_positions(self) -> Dict:
         """Tüm açık pozisyonları piyasa fiyatından kapat"""
-        print("\n🚨 [EMERGENCY] Tüm pozisyonlar kapatılıyor...")
+        print("\n🚨 [EMERGENCY] Tüm pozisyonlar terminating...")
         results = []
         
         # RiskManager'daki pozisyonları kopyala (iterasyon güvenliği için)
@@ -1106,7 +1121,7 @@ class CryptoScalpingBot:
                 ticker = await self.exchange_adapter.watch_ticker(symbol)
                 price = ticker['last'] if ticker else pos['entry_price']
                 
-                print(f"   📉 {symbol} kapatılıyor... (Fiyat: {price})")
+                print(f"   📉 {symbol} terminating... (Fiyat: {price})")
                 success = self.risk_manager.close_position(
                     pos, 
                     price, 
@@ -1188,7 +1203,7 @@ class CryptoScalpingBot:
             if not has_tp:
                 await self._repair_tp_order(symbol, position)
 
-            # 🚨 REIS STRATEGY: NO SL ON EXCHANGE (Recovery handles risk)
+            # 🚨 GHOST STRATEGY: NO SL ON EXCHANGE (Recovery handles risk)
             if self.iteration_count % 5 == 0:
                 await self._cleanup_exchange_sl_orders(symbol, position)
 
@@ -1254,7 +1269,7 @@ class CryptoScalpingBot:
                             new_entry = position['entry_price']
                             
                             # New TP for remaining position (entry + 1%)
-                            tp_percent = getattr(config, 'REIS_TP_PCT', 1.0) / 100
+                            tp_percent = getattr(config, 'GHOST_TP_PCT', 1.0) / 100
                             if direction == 'BUY':
                                 tp_price = new_entry * (1 + tp_percent)
                             else:
@@ -1281,7 +1296,7 @@ class CryptoScalpingBot:
                     if is_filled:
                         amount_usd = pending.get('amount_usd', 0)
                         layer_size = amount_usd / current_price if current_price > 0 else 0
-                        print(f"   ✅ [{symbol}] KADEME DOLDU! Fiyat: ${current_price:.4f} hit Limit: ${limit_level:.4f}")
+                        print(f"   ✅ [{symbol}] TIER DOLDU! Fiyat: ${current_price:.4f} hit Limit: ${limit_level:.4f}")
                         
                         # 1. Add layer to position
                         self.risk_manager.add_layer(symbol, current_price, layer_size)
@@ -1310,24 +1325,24 @@ class CryptoScalpingBot:
                         await self._repair_tp_order(symbol, position)
                         break
 
-            # --- 4. LAYERING TRIGGER (REIS LOGIC) ---
+            # --- 4. LAYERING TRIGGER (GHOST LOGIC) ---
             layers = self.risk_manager.position_layers.get(symbol, [])
             first_entry_price = layers[0].get('first_entry_price', layers[0]['price']) if layers else position['entry_price']
             
-            # [REIS FIX] Use PRICE DISTANCE from baseline instead of net P&L %
+            # [GHOST FIX] Use PRICE DISTANCE from baseline instead of net P&L %
             price_dist_from_baseline = abs(current_price - first_entry_price) / first_entry_price * 100
             
             has_pending_layer = any(o.get('type') == 'ADD' for o in pending_orders)
             
             TRIGGER_PCT = 1.5
-            LIMIT_PCT = getattr(config, 'KADEME_THRESHOLD_PCT', 2.0)
+            LIMIT_PCT = getattr(config, 'TIER_THRESHOLD_PCT', 2.0)
             
             # [DEBUG] Log every check for layering
             if self.iteration_count % 5 == 0:
-                print(f"   🔍 [{symbol}] KADEME CHECK: Baseline=${first_entry_price:.4f} | Fiyat=${current_price:.4f} | Mesafe=%{price_dist_from_baseline:.2f} | Trigger=%{TRIGGER_PCT} | Layers={len(layers)} | Pending={has_pending_layer}")
+                print(f"   🔍 [{symbol}] TIER CHECK: Baseline=${first_entry_price:.4f} | Fiyat=${current_price:.4f} | Mesafe=%{price_dist_from_baseline:.2f} | Trigger=%{TRIGGER_PCT} | Layers={len(layers)} | Pending={has_pending_layer}")
             
-            if price_dist_from_baseline >= TRIGGER_PCT and len(layers) <= getattr(config, 'MAX_KADEME_COUNT', 3) and not has_pending_layer:
-                # Calculate limit price at -2% (or KADEME_THRESHOLD_PCT) from FIRST entry
+            if price_dist_from_baseline >= TRIGGER_PCT and len(layers) <= getattr(config, 'MAX_TIER_COUNT', 3) and not has_pending_layer:
+                # Calculate limit price at -2% (or TIER_THRESHOLD_PCT) from FIRST entry
                 offset = LIMIT_PCT / 100
                 limit_price = first_entry_price * (1 - offset) if direction == 'BUY' else first_entry_price * (1 + offset)
                 
@@ -1339,7 +1354,7 @@ class CryptoScalpingBot:
                         for o in open_orders if o.get('price')
                     )
                     if existing_layer_order:
-                        print(f"   ⚠️ [{symbol}] KADEME ATLANIYOR: Bu seviyede (${limit_price:.4f}) zaten borsa emri var!")
+                        print(f"   ⚠️ [{symbol}] TIER ATLANIYOR: Bu seviyede (${limit_price:.4f}) zaten borsa emri var!")
                         continue
                 except Exception as e:
                     print(f"   ⚠️ [{symbol}] Open orders check error: {e}")
@@ -1348,19 +1363,19 @@ class CryptoScalpingBot:
                 new_layer_size = self.risk_manager.calculate_position_size(limit_price, direction=direction, symbol=symbol)
                 
                 if new_layer_size > 0:
-                    print(f"   📋 [{symbol}] KADEME TETIKLENIYOR: %{price_dist_from_baseline:.2f} fiyat mesafesi. Hedef Limit: ${limit_price:.4f} (Size: {new_layer_size:.4f})")
+                    print(f"   📋 [{symbol}] TIER TETIKLENIYOR: %{price_dist_from_baseline:.2f} fiyat mesafesi. Hedef Limit: ${limit_price:.4f} (Size: {new_layer_size:.4f})")
                     try:
                         oid = self.exchange_adapter.create_limit_order(symbol, direction.lower(), new_layer_size, limit_price)
                         if oid:
                             self.risk_manager.create_pending_layer_order(symbol, limit_price, new_layer_size * limit_price, "ADD")
-                            print(f"   ✅ [{symbol}] KADEME LIMIT EMIR VERILDI: OID={oid}")
+                            print(f"   ✅ [{symbol}] TIER LIMIT EMIR VERILDI: OID={oid}")
                     except Exception as e:
-                        print(f"   ❌ [{symbol}] KADEME EMIR HATASI: {e}")
+                        print(f"   ❌ [{symbol}] TIER EMIR HATASI: {e}")
                 else:
                     # [HELPFUL LOGGING] Why was it rejected?
-                    print(f"   ⚠️ [{symbol}] KADEME REDDEDILDI: RiskManager size 0 verdi (Bakiye veya Spread engeli?)")
+                    print(f"   ⚠️ [{symbol}] TIER REDDEDILDI: RiskManager size 0 verdi (Bakiye veya Spread engeli?)")
 
-            # --- 5. BREAK-EVEN RESET (REIS SAFETY) ---
+            # --- 5. BREAK-EVEN RESET (GHOST SAFETY) ---
             # Eğer fiyat ortalamaya gelirse (%0.1 kâr) tüm ek katmanları temizle (Initial'a dön)
             if len(layers) > 1 and getattr(config, 'BREAKEVEN_RESET_ENABLED', True):
                 reset_buffer = 0.001 # %0.1 profit
@@ -1410,14 +1425,14 @@ class CryptoScalpingBot:
             print(f"   ⚠️ [{symbol}] TP Repair fail: {e}")
 
     async def _cleanup_exchange_sl_orders(self, symbol, position):
-        """REIS Strategy: Ensure NO SL orders exist on exchange"""
+        """GHOST Strategy: Ensure NO SL orders exist on exchange"""
         try:
             current_orders = self.exchange_adapter.fetch_open_orders(symbol)
             target_side = "sell" if position['direction'] == "BUY" else "buy"
             all_sl = [o for o in current_orders if o.get('side', '').lower() == target_side and any(t in o.get('type', '').lower() for t in ['stop', 'trigger', 'conditional'])]
             for sl in all_sl:
                 self.exchange_adapter.cancel_order(sl.get('id'), symbol)
-                print(f"   🧹 [{symbol}] Removed exchange SL (Reis Strategy doesn't use standard SL)")
+                print(f"   🧹 [{symbol}] Removed exchange SL (Ghost Strategy doesn't use standard SL)")
             position['sl_order_id'] = None
         except: pass
 

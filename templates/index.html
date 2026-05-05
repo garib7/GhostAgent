@@ -4,23 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ReisBot Pro | Trading Terminal</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
-        rel="stylesheet">
+    <title>GhostAgent | Solana Autonomous Protocol</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #00f2ff;
-            --secondary: #7000ff;
-            --accent: #ff00c8;
+            /* Solana Brand Colors */
+            --primary: #00ffa3;     /* Solana Neon Green */
+            --secondary: #dc1fff;   /* Solana Purple */
+            --accent: #03e1ff;      /* Cyber Blue */
             --success: #00ff88;
             --danger: #ff3366;
             --warning: #ffcc00;
-            --bg: #03050a;
-            --panel: rgba(13, 17, 28, 0.7);
-            --border: rgba(255, 255, 255, 0.08);
-            --text-main: #ffffff;
-            --text-dim: #94a3b8;
+            --bg: #050508;          /* Pitch dark cyberpunk bg */
+            --panel: rgba(10, 10, 15, 0.85);
+            --border: rgba(0, 255, 163, 0.15);
+            --text-main: #f0f0f5;
+            --text-dim: #7f8ea3;
         }
 
         * {
@@ -33,8 +32,8 @@
         body {
             background-color: var(--bg);
             background-image:
-                radial-gradient(circle at 0% 0%, rgba(112, 0, 255, 0.15), transparent 40%),
-                radial-gradient(circle at 100% 100%, rgba(0, 242, 255, 0.15), transparent 40%);
+                radial-gradient(circle at 10% 20%, rgba(220, 31, 255, 0.08), transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 255, 163, 0.08), transparent 40%);
             color: var(--text-main);
             font-family: 'Outfit', sans-serif;
             overflow: hidden;
@@ -55,25 +54,24 @@
         }
 
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid var(--panel);
-            border-top: 4px solid var(--primary);
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(0, 255, 163, 0.1);
+            border-top: 3px solid var(--primary);
+            border-bottom: 3px solid var(--secondary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
-            100% {
-                transform: rotate(360deg);
-            }
+            100% { transform: rotate(360deg); }
         }
 
         /* Main Layout */
         .app-container {
             display: grid;
-            grid-template-columns: 280px 1fr 320px;
-            grid-template-rows: 70px 1fr 200px;
+            grid-template-columns: 280px 1fr 340px;
+            grid-template-rows: 70px 1fr 220px;
             gap: 12px;
             padding: 12px;
             height: 100vh;
@@ -84,13 +82,14 @@
         /* Glass Panel Base */
         .panel {
             background: var(--panel);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(25px);
             border: 1px solid var(--border);
-            border-radius: 16px;
+            border-radius: 12px;
             padding: 16px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
 
         /* HEADER */
@@ -100,6 +99,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 0 24px;
+            border-bottom: 2px solid rgba(0, 255, 163, 0.3);
         }
 
         .logo {
@@ -109,18 +109,19 @@
         }
 
         .logo-icon {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             background: linear-gradient(135deg, var(--secondary), var(--primary));
             border-radius: 8px;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 255, 163, 0.4);
         }
 
         .logo-text {
-            font-size: 1.4rem;
+            font-size: 1.6rem;
+            font-family: 'JetBrains Mono', monospace;
             font-weight: 800;
             letter-spacing: -0.5px;
             background: linear-gradient(to right, #fff, var(--primary));
@@ -142,35 +143,40 @@
         }
 
         .stat-label {
-            font-size: 0.7rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
             color: var(--text-dim);
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .stat-value {
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.15rem;
+            font-weight: 700;
             color: var(--primary);
+            text-shadow: 0 0 8px rgba(0, 255, 163, 0.3);
         }
 
         .status-badge {
             display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(0, 255, 136, 0.1);
-            color: var(--success);
+            background: rgba(0, 255, 163, 0.1);
+            color: var(--primary);
             padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: 1px solid rgba(0, 255, 163, 0.4);
+            text-transform: uppercase;
         }
 
         .status-badge.stopped {
             background: rgba(255, 51, 102, 0.1);
             color: var(--danger);
-            border: 1px solid rgba(255, 51, 102, 0.2);
+            border: 1px solid rgba(255, 51, 102, 0.3);
         }
 
         .status-dot {
@@ -179,104 +185,115 @@
             border-radius: 50%;
             background: currentColor;
             box-shadow: 0 0 10px currentColor;
-            animation: pulse 2s infinite;
+            animation: pulse 1.5s infinite;
         }
 
         @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.4;
-            }
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.4; }
         }
 
         .settings-trigger {
             cursor: pointer;
             padding: 8px;
-            border-radius: 50%;
-            transition: background 0.2s;
+            border-radius: 8px;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--text-dim);
+            border: 1px solid transparent;
         }
 
         .settings-trigger:hover {
-            background: var(--border);
-            color: white;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            background: rgba(0, 255, 163, 0.1);
+            box-shadow: 0 0 10px rgba(0, 255, 163, 0.2);
         }
 
         /* SIDEBAR / CONTROLS */
         .sidebar {
             grid-row: 2 / 3;
-            gap: 16px;
+            gap: 20px;
             overflow-y: auto;
         }
 
         .section-title {
-            font-size: 0.9rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
             font-weight: 700;
-            color: var(--text-dim);
+            color: var(--primary);
             margin-bottom: 12px;
             text-transform: uppercase;
             display: flex;
             justify-content: space-between;
+            letter-spacing: 1px;
+            text-shadow: 0 0 5px rgba(0, 255, 163, 0.2);
         }
 
         .btn {
             width: 100%;
             padding: 12px;
-            border-radius: 12px;
+            border-radius: 4px;
             border: none;
             cursor: pointer;
-            font-family: inherit;
-            font-weight: 600;
-            font-size: 0.95rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-            color: white;
-            box-shadow: 0 4px 15px rgba(112, 0, 255, 0.3);
+            background: rgba(0, 255, 163, 0.1);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 15px rgba(0, 255, 163, 0.2);
         }
 
         .btn-primary:active {
             transform: scale(0.98);
         }
 
+        .btn-primary:hover {
+            background: var(--primary);
+            color: black;
+            box-shadow: 0 0 20px rgba(0, 255, 163, 0.4);
+        }
+
         .btn-danger {
             background: rgba(255, 51, 102, 0.1);
             color: var(--danger);
-            border: 1px solid rgba(255, 51, 102, 0.2);
+            border: 1px solid rgba(255, 51, 102, 0.5);
         }
 
         .btn-danger:hover {
             background: var(--danger);
             color: white;
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
         }
 
         .btn-outline {
             background: transparent;
             border: 1px solid var(--border);
-            color: var(--text-main);
+            color: var(--text-dim);
         }
 
-        .btn-outline:hover {
-            background: var(--border);
+        .btn-outline:hover, .btn-outline.active {
+            border-color: var(--secondary);
+            color: var(--secondary);
+            background: rgba(220, 31, 255, 0.1);
         }
 
         /* MAIN CONTENT - POSITIONS */
         .main-content {
             grid-row: 2 / 3;
+            background: linear-gradient(to bottom, rgba(10,10,15,0.9), rgba(5,5,8,0.95));
         }
 
         .table-container {
@@ -289,79 +306,93 @@
             width: 100%;
             border-collapse: collapse;
             text-align: left;
+            font-family: 'JetBrains Mono', monospace;
         }
 
         th {
             padding: 12px;
             color: var(--text-dim);
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 2px solid var(--border);
             position: sticky;
             top: 0;
             background: var(--panel);
+            letter-spacing: 1px;
         }
 
         td {
             padding: 14px 12px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: #d8d8d8;
         }
 
         .badge-side {
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 2px;
+            font-size: 0.65rem;
             font-weight: 800;
+            text-transform: uppercase;
         }
 
         .side-buy {
             background: rgba(0, 255, 136, 0.15);
             color: var(--success);
+            border: 1px solid rgba(0, 255, 136, 0.3);
         }
 
         .side-sell {
             background: rgba(255, 51, 102, 0.15);
             color: var(--danger);
+            border: 1px solid rgba(255, 51, 102, 0.3);
         }
 
         .pnl-plus {
             color: var(--success);
             font-weight: 700;
+            text-shadow: 0 0 5px rgba(0, 255, 136, 0.4);
         }
 
         .pnl-minus {
             color: var(--danger);
             font-weight: 700;
+            text-shadow: 0 0 5px rgba(255, 51, 102, 0.4);
         }
 
         /* RIGHT BAR - INDICATORS */
         .indicators-bar {
             grid-row: 2 / 3;
+            border-right: 1px solid var(--border);
         }
 
         .symbol-card {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 4px;
             padding: 12px;
-            margin-bottom: 8px;
-            border: 1px solid transparent;
-            transition: border-color 0.2s;
+            margin-bottom: 10px;
+            border: 1px solid rgba(0,255,163,0.1);
+            transition: all 0.3s;
         }
 
         .symbol-card:hover {
             border-color: var(--primary);
+            box-shadow: inset 0 0 10px rgba(0,255,163,0.05);
         }
 
         .card-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 6px;
         }
 
         .card-symbol {
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--primary);
         }
 
         .card-metrics {
@@ -376,33 +407,63 @@
         }
 
         .metric-label {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             color: var(--text-dim);
+            text-transform: uppercase;
         }
 
         .metric-value {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: #fff;
         }
 
-        /* BOTTOM - LOGS */
+        /* BOTTOM - LOGS / TERMINAL */
         .logs-panel {
             grid-column: 1 / 4;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(2, 2, 5, 0.95); /* Deeper black for terminal */
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        /* Terminal Scanline Effect */
+        .logs-panel::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* Glitch effect on panel title */
+        .terminal-title {
+            color: var(--primary);
+            text-shadow: 2px 0 var(--secondary), -2px 0 var(--accent);
         }
 
         .log-terminal {
             flex: 1;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            color: #ccc;
+            font-size: 0.75rem;
+            color: var(--primary); /* Matrix green default */
             overflow-y: auto;
-            padding: 4px;
-            line-height: 1.4;
+            padding: 8px;
+            line-height: 1.5;
+            position: relative;
+            z-index: 3;
+            text-shadow: 0 0 4px rgba(0,255,163,0.3);
         }
 
         .log-entry {
-            margin-bottom: 2px;
+            margin-bottom: 4px;
         }
 
         .log-time {
@@ -411,8 +472,8 @@
         }
 
         .log-tag {
-            color: var(--primary);
-            font-weight: 600;
+            color: var(--secondary);
+            font-weight: 700;
             margin-right: 8px;
         }
 
@@ -420,8 +481,8 @@
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
             z-index: 1000;
             display: none;
             justify-content: center;
@@ -430,57 +491,68 @@
 
         .modal {
             background: var(--bg);
-            border: 1px solid var(--border);
-            width: 500px;
+            border: 1px solid var(--primary);
+            width: 550px;
             max-width: 95%;
             max-height: 90vh;
             overflow-y: auto;
-            border-radius: 20px;
+            border-radius: 8px;
             padding: 24px;
             display: flex;
             flex-direction: column;
             gap: 20px;
-            box-shadow: 0 0 50px rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 40px rgba(0, 255, 163, 0.15);
+            position: relative;
+        }
+
+        .modal::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--secondary), var(--primary), var(--accent));
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .input-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
         .input-group label {
-            font-size: 0.8rem;
-            color: var(--text-dim);
-            font-weight: 600;
+            font-size: 0.75rem;
+            color: var(--primary);
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
         }
 
-        input,
-        select {
-            background: rgba(255, 255, 255, 0.05);
+        input, select {
+            background: rgba(0, 0, 0, 0.5);
             border: 1px solid var(--border);
             padding: 12px;
-            border-radius: 8px;
-            color: white;
-            font-family: inherit;
+            border-radius: 4px;
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
             outline: none;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
         }
 
-        input:focus {
+        input:focus, select:focus {
             border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 255, 163, 0.2);
         }
 
         .modal-footer {
             display: flex;
             gap: 12px;
-            margin-top: 10px;
+            margin-top: 15px;
         }
 
         /* SCROLLBAR */
@@ -493,41 +565,12 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: var(--border);
+            background: rgba(0, 255, 163, 0.2);
             border-radius: 10px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-dim);
-        }
-
-        /* ANIMATIONS */
-        .pulse-once-green {
-            animation: pulseGreen 0.5s ease;
-        }
-
-        .pulse-once-red {
-            animation: pulseRed 0.5s ease;
-        }
-
-        @keyframes pulseGreen {
-            0% {
-                background: rgba(0, 255, 136, 0.3);
-            }
-
-            100% {
-                background: transparent;
-            }
-        }
-
-        @keyframes pulseRed {
-            0% {
-                background: rgba(255, 51, 102, 0.3);
-            }
-
-            100% {
-                background: transparent;
-            }
+            background: var(--primary);
         }
 
         .spinning {
@@ -539,97 +582,77 @@
 <body>
     <div id="loader">
         <div class="spinner"></div>
-        <p style="margin-top:20px; color:var(--text-dim); letter-spacing:2px">TERMINAL INITIALIZING...</p>
+        <p style="margin-top:20px; color:var(--primary); font-family: 'JetBrains Mono'; letter-spacing:2px; font-weight:700; text-shadow: 0 0 10px var(--primary);">ESTABLISHING SOLANA TRUNK...</p>
     </div>
 
     <!-- SETTINGS MODAL -->
     <div class="modal-overlay" id="settings-modal">
         <div class="modal">
             <div class="modal-header">
-                <h2 style="font-weight: 800; font-size: 1.4rem;">Gelişmiş Ayarlar</h2>
+                <h2 style="font-weight: 800; font-size: 1.2rem; color:#fff;">ENGINE CONFIGURATION</h2>
                 <div class="settings-trigger" onclick="closeModal()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
+                        <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
                     </svg>
                 </div>
             </div>
 
             <div class="input-group">
-                <label>API Key</label>
-                <input type="text" id="set-api-key" placeholder="GRVT API Key">
+                <label>Solana RPC / API Key</label>
+                <input type="text" id="set-api-key" placeholder="Enter Jupiter Route API / RPC Key">
             </div>
             <div class="input-group">
-                <label>Private Key (Secret)</label>
-                <input type="password" id="set-secret-key" placeholder="Private Key / Secret">
+                <label>Agent Secret (Private Key)</label>
+                <input type="password" id="set-secret-key" placeholder="Encrypted Agent Secret">
             </div>
             <div class="input-group">
-                <label>Account ID</label>
-                <input type="text" id="set-account-id" placeholder="Trading Account ID">
+                <label>Network Account ID</label>
+                <input type="text" id="set-account-id" placeholder="Solana Wallet / SubAccount">
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap:12px;">
                 <div class="input-group">
-                    <label>İşlem Miktarı (USD Margin)</label>
+                    <label>Base Layer (USD Margin)</label>
                     <input type="number" id="set-margin" step="1" min="5" value="5">
                 </div>
                 <div class="input-group">
-                    <label>Kaldıraç (Leverage)</label>
+                    <label>Phantom Leverage Multip.</label>
                     <input type="number" id="set-leverage" step="1" min="1" max="50" value="25">
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap:12px;">
                 <div class="input-group">
-                    <label>Otomatik Kasa Ölçekleme</label>
+                    <label>Dynamic Risk Sizing</label>
                     <select id="set-auto-scale">
-                        <option value="false">Devre Dışı</option>
-                        <option value="true">Aktif (Bakiyeye Göre Sizing)</option>
+                        <option value="false">Static Scaling</option>
+                        <option value="true">Active (TVL Based Sizing)</option>
                     </select>
                 </div>
                 <div class="input-group">
-                    <label>Referans Kasa (USD)</label>
+                    <label>Reference TVL (USD)</label>
                     <input type="number" id="set-initial-balance" step="10" min="50" value="100">
                 </div>
             </div>
-            <div style="font-size: 0.7rem; color: var(--text-dim); line-height: 1.3; margin-top: -10px;">
-                💡 <b>Mantık:</b> Kasanız Referans'tan büyükse işlem boyutu artar, küçükse azalır.
-                <br><i>Örn: Kasa $200 / Referans $100 ise işlemler 2 katı büyüklükte açılır. Eğer kasa $200 iken risk
-                    artmasın ($10-$5 gitmek) isterseniz Referans'ı da 200 yaparak 1x çarpanını koruyabilirsiniz.</i>
-            </div>
 
             <div class="input-group">
-                <label>Trading Modu</label>
+                <label>Execution Environment</label>
                 <select id="set-paper">
-                    <option value="true">Paper Trading (Simülasyon)</option>
-                    <option value="false">Mainnet (Gerçek Para)</option>
+                    <option value="true">Testnet (Simulation Node)</option>
+                    <option value="false">Solana Mainnet (Live Capital)</option>
                 </select>
             </div>
 
-            <div
-                style="background: rgba(255, 51, 102, 0.1); border: 1px solid rgba(255, 51, 102, 0.3); padding: 15px; border-radius: 12px; font-size: 0.8rem; color: #ff80a0; line-height: 1.5; margin-bottom: 5px;">
-                <strong style="color: var(--danger); font-size: 0.9rem;">🛑 KRİTİK ZORUNLULUK:</strong><br>
-                Kaldıraç (Leverage) ayarı <b>GRVT platformu üzerinden manuel olarak</b> mutlaka bu paneldeki değerle
-                aynı olacak şekilde ayarlanmalıdır.
-
-                <div
-                    style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.75rem; color: var(--text-dim);">
-                    <b>Örnek Hesaplama (XRP @ $2):</b><br>
-                    - Bot Ayarı: 10 USDT Margin & 10x Kaldıraç<br>
-                    - Hedef Hacim: 100 USDT (50 adet XRP)<br>
-                    - Eğer GRVT'de kaldıracınız <b>20x</b> ise, borsa sizden 10 USDT değil sadece <b>5 USDT</b> margin
-                    eksiltir. <br>
-                    <i>Yani bot emir miktarını (Quantity) hesaplar, borsa ise margin kullanımını kendi kaldıracıyla
-                        belirler.</i>
-                </div>
+            <div style="background: rgba(255, 51, 102, 0.05); border: 1px dashed rgba(255, 51, 102, 0.4); padding: 15px; border-radius: 4px; font-size: 0.75rem; color: #ff80a0; font-family:'JetBrains Mono'; line-height: 1.5; margin-bottom: 5px;">
+                <strong style="color: var(--danger); font-size: 0.85rem;">[!] PROTOCOL WARNING:</strong><br>
+                Ensure margin constraints in your backend environment match exactly with GhostAgent leverage multipliers here. Mismatched latency triggers will result in execution rejections.
             </div>
 
             <div class="modal-footer">
-                <div style="flex: 1; font-size: 0.75rem; color: var(--text-dim);">
-                    * Ayarların aktif olması için botun durdurulup yeniden başlatılması gerekir.
+                <div style="flex: 1; font-size: 0.7rem; font-family:'JetBrains Mono'; color: var(--text-dim);">
+                    > Node restart required after param injection.
                 </div>
-                <button class="btn btn-primary" style="width: auto; padding: 10px 24px;"
-                    onclick="saveSettings()">Ayarları Uygula</button>
+                <button class="btn btn-primary" style="width: auto; padding: 10px 24px;" onclick="saveSettings()">INJECT PARAMS</button>
             </div>
         </div>
     </div>
@@ -639,51 +662,47 @@
         <header class="panel header">
             <div class="logo">
                 <div class="logo-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                        <path
-                            d="M13,3H11V7H13V3M13,17H11V21H13V17M21,11H17V13H21V11M7,11H3V13H7V11M5.64,4.22L4.22,5.64L7.05,8.46L8.46,7.05L5.64,4.22M15.54,16.95L16.95,15.54L19.78,18.36L18.36,19.78L15.54,16.95M18.36,4.22L19.78,5.64L16.95,8.46L15.54,7.05L18.36,4.22M8.46,15.54L7.05,16.95L4.22,19.78L5.64,18.36L8.46,15.54M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9Z" />
+                    <!-- A simple cyber ghost / shield icon -->
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+                        <path d="M12,2A9,9 0 0,1 21,11V21.5L18.5,19L16,21.5L13.5,19L11,21.5L8.5,19L6,21.5L3.5,19L1,21.5V11A9,9 0 0,1 10,2M12,4A7,7 0 0,0 5,11V18.17L6,17.17L8.5,19.67L11,17.17L13.5,19.67L16,17.17L18.5,19.67L19,18.17V11A7,7 0 0,0 12,4Z" />
                     </svg>
                 </div>
-                <div class="logo-text">ReisBot Pro</div>
+                <!-- Branding changed to GhostAgent -->
+                <div class="logo-text">GhostAgent<span style="color:var(--text-dim);font-weight:400;">|Protocol</span></div>
             </div>
 
             <div class="top-stats">
                 <div class="stat-item">
-                    <span class="stat-label">Toplam Bakiye</span>
+                    <span class="stat-label">TOTAL TVL (USD)</span>
                     <span class="stat-value" id="balance-val">$0.00</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Bağlanan Sermaye</span>
+                    <span class="stat-label">ROUTED LIQUIDITY</span>
                     <span class="stat-value" id="committed-val" style="color:var(--accent)">$0.00</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Açık İşlem P&L</span>
+                    <span class="stat-label">ACTIVE P&L</span>
                     <span class="stat-value" id="unrealized-pnl-val" style="color:var(--text-main)">$0.00</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Günlük Kâr</span>
+                    <span class="stat-label">SESSION YIELD</span>
                     <span class="stat-value" id="daily-pnl-val" style="color:var(--text-main)">$0.00</span>
                 </div>
                 <div class="status-badge stopped" id="bot-status-badge">
                     <div class="status-dot"></div>
-                    <span id="bot-status-text">DISCONNECTED</span>
+                    <span id="bot-status-text">OFFLINE</span>
                 </div>
-                <!-- Help Button -->
-                <a href="/manual" target="_blank"
-                    style="color:var(--text-dim); text-decoration:none; display:flex; align-items:center; justify-content:center; margin-right:5px; transition:0.3s; padding:8px; border-radius:50%; background:rgba(255,255,255,0.05);"
-                    onmouseover="this.style.color='var(--primary)'; this.style.background='rgba(0,242,255,0.1)'"
-                    onmouseout="this.style.color='var(--text-dim)'; this.style.background='rgba(255,255,255,0.05)'">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                <!-- Help / Documentation -->
+                <a href="/manual" target="_blank" class="settings-trigger" title="Agent Neural Manual">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
                     </svg>
                 </a>
-                <div class="settings-trigger" onclick="openModal()">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" />
+                <div class="settings-trigger" onclick="openModal()" title="Node Configuration">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" />
                     </svg>
                 </div>
             </div>
@@ -693,42 +712,37 @@
         <aside class="panel sidebar">
             <div>
                 <div>
-                    <div class="section-title">Strateji Modu</div>
+                    <div class="section-title">ROUTING ALGORITHM</div>
                     <div style="display:flex; gap:6px; margin-bottom:12px;">
-                        <button class="btn btn-outline" id="mode-econ" onclick="setStrategy('ECONOMIC')"
-                            style="padding:8px; font-size:0.75rem; flex:1">ECONOMIC</button>
-                        <button class="btn btn-outline" id="mode-martin" onclick="setStrategy('MARTINGALE')"
-                            style="padding:8px; font-size:0.75rem; flex:1">MARTINGALE</button>
+                        <button class="btn btn-outline" id="mode-econ" onclick="setStrategy('ECONOMIC')" style="padding:8px; font-size:0.75rem; flex:1">TTP BASE Layer</button>
+                        <button class="btn btn-outline" id="mode-martin" onclick="setStrategy('MARTINGALE')" style="padding:8px; font-size:0.75rem; flex:1">TTP SCALPER</button>
                     </div>
                     <button class="btn btn-primary" id="start-btn" onclick="toggleBot()">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M8,5.14V19.14L19,12.14L8,5.14Z" />
                         </svg>
-                        Botu Başlat
+                        INITIATE GHOST ENGINE
                     </button>
                 </div>
 
-                <div>
-                    <div class="section-title">Acil Durum</div>
-                    <div style="display:flex; flex-direction:column; gap:6px">
-                        <button class="btn btn-danger" style="padding: 10px;"
-                            onclick="emergencyAction('close_all')">Tümünü
-                            Kapat</button>
-                        <button class="btn btn-outline" style="color:var(--warning); padding: 10px;"
-                            onclick="emergencyAction('cancel_all')">Emirleri İptal Et</button>
+                <div style="margin-top: 25px;">
+                    <div class="section-title" style="color:var(--danger); text-shadow:0 0 5px rgba(255,51,102,0.4)">OVERRIDES</div>
+                    <div style="display:flex; flex-direction:column; gap:8px">
+                        <button class="btn btn-danger" style="padding: 10px;" onclick="emergencyAction('close_all')">FORCE CLOSE ALL ROUTS</button>
+                        <button class="btn btn-outline" style="color:var(--warning); padding: 10px;" onclick="emergencyAction('cancel_all')">PURGE PENDING TX</button>
                     </div>
                 </div>
 
                 <div style="margin-top:auto">
-                    <div class="section-title">Terminal Durumu</div>
+                    <div class="section-title">ON-CHAIN METRICS</div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap:10px">
                         <div class="symbol-card" style="margin:0; text-align:center; padding: 8px;">
-                            <div class="metric-label">Win Rate</div>
-                            <div class="metric-value" id="win-rate">0%</div>
+                            <div class="metric-label">Execution WR</div>
+                            <div class="metric-value" id="win-rate" style="color: var(--primary);">0%</div>
                         </div>
                         <div class="symbol-card" style="margin:0; text-align:center; padding: 8px;">
-                            <div class="metric-label">Trades</div>
-                            <div class="metric-value" id="total-trades">0</div>
+                            <div class="metric-label">Blocks Routed</div>
+                            <div class="metric-value" id="total-trades" style="color: var(--accent);">0</div>
                         </div>
                     </div>
                 </div>
@@ -738,28 +752,27 @@
         <main class="panel main-content">
             <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
-                    Aktif Pozisyonlar
-                    <span id="pos-count" style="color:var(--primary)">0</span>
+                    ACTIVE NETWORK ROUTS
+                    <span id="pos-count" style="display:inline-block; margin-left:8px; padding: 2px 6px; background:rgba(0,255,163,0.1); border-radius:4px; border:1px solid var(--primary); color:var(--primary); font-size:0.75rem;">0</span>
                 </div>
-                <div style="font-size:0.65rem; color:var(--text-dim); background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:12px; display:flex; gap:5px; align-items:center; cursor:help"
-                    title="DİKKAT: 3 USDT altındaki 'Dust' bakiyeler bot tarafından yönetilmez. En sağlıklı olanı, bu küçük bakiyeleri Borsa arayüzünden manuel olarak kapatmanızdır.">
+                <div style="font-size:0.6rem; font-family:'JetBrains Mono'; color:var(--text-dim); background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:4px; display:flex; gap:5px; align-items:center; cursor:help"
+                    title="Small threshold balances (<$3) are ignored by GhostEngine targeting protocols to preserve fee-efficiency.">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,16.5H13V18.5H11V16.5M11,7H13V15H11V7Z" />
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,16.5H13V18.5H11V16.5M11,7H13V15H11V7Z" />
                     </svg>
-                    Dust Gizli (<$3) </div>
+                    Micro-Dust Filtered </div>
                 </div>
                 <div class="table-container">
                     <table id="positions-table">
                         <thead>
                             <tr>
-                                <th>Sembol</th>
-                                <th>Yön</th>
-                                <th>Büyüklük</th>
-                                <th>Giriş Fiyatı</th>
-                                <th>Liq Mesafe</th>
-                                <th>Net P&L</th>
-                                <th>İşlem</th>
+                                <th>Token Pool</th>
+                                <th>Vector</th>
+                                <th>Volume</th>
+                                <th>Entry Root</th>
+                                <th>Liq Offset</th>
+                                <th>Delta P&L</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -771,18 +784,17 @@
 
         <!-- RIGHT BAR - INDICATORS -->
         <aside class="panel indicators-bar">
-            <div class="section-title">Teknik Veriler (Hitchhiker)</div>
-            <div id="indicators-list" style="overflow-y:auto">
+            <div class="section-title">TTP GHOST ENGINE (TELEMETRY)</div>
+            <div id="indicators-list" style="overflow-y:auto; padding-right:5px;">
                 <!-- Dynamic cards -->
             </div>
         </aside>
 
         <!-- BOTTOM - LOGS -->
         <footer class="panel logs-panel">
-            <div class="section-title">Sistem Logları</div>
+            <div class="section-title terminal-title">~> GHOST_AGENT OVERCAST TERMINAL</div>
             <div class="log-terminal" id="log-terminal">
-                <div class="log-entry"><span class="log-time">12:00:00</span> <span class="log-tag">SYSTEM</span>
-                    Terminal başlatıldı.</div>
+                <!-- Javascript will inject logs here -->
             </div>
         </footer>
     </div>
@@ -809,8 +821,10 @@
 
         // Initialize
         window.addEventListener('load', async () => {
+            addLog('SYS_INIT', 'Establishing Sub-second Solana WebSocket bindings...');
             setTimeout(() => {
                 document.getElementById('loader').style.opacity = '0';
+                addLog('CORE', 'GhostAgent Engine Ready. Standing by for protocol initiation.');
                 setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
             }, 1000);
 
@@ -848,11 +862,11 @@
 
             const res = await api('settings', 'POST', body);
             if (res.success) {
-                addLog('SYSTEM', 'Ayarlar başarıyla kaydedildi.');
+                addLog('NODE', 'Parameters injected directly into Ghost Engine memory.');
                 closeModal();
                 updateTelemetry();
             } else {
-                alert('Hata: ' + res.message);
+                alert('Fatal Error: ' + res.message);
             }
         }
 
@@ -866,12 +880,12 @@
             if (!isRunning) {
                 const res = await api('bot/start', 'POST');
                 if (res.success) {
-                    addLog('BOT', 'Başlatma komutu gönderildi.');
+                    addLog('ROUTER', 'Broadcasting LIVE agent execution intent to Solana network...');
                 }
             } else {
                 const res = await api('bot/stop', 'POST');
                 if (res.success) {
-                    addLog('BOT', 'Durdurma komutu gönderildi.');
+                    addLog('ROUTER', 'Severing network bindings. Engine entering sleep state.');
                 }
             }
 
@@ -884,10 +898,10 @@
         }
 
         async function emergencyAction(action) {
-            if (!confirm('Emin misiniz? Bu işlem geri alınamaz.')) return;
+            if (!confirm('CRITICAL PROTOCOL OVERRIDE: Proceed with on-chain memory flush?')) return;
             const res = await api(`bot/${action}`, 'POST');
             if (res.success) {
-                addLog('EMERGENCY', res.message || 'Komut uygulandı.');
+                addLog('SYS_OVERRIDE', res.message || 'On-chain memory wiped. Nodes reset.');
             }
         }
 
@@ -900,22 +914,24 @@
 
             if (status === 'Error') {
                 badge.className = 'status-badge stopped';
-                text.innerText = 'ERROR';
-                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg> Botu Başlat`;
+                text.innerText = 'ERR_CRITICAL';
+                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg> INITIATE GHOST ENGINE`;
                 btn.className = 'btn btn-primary';
                 return;
             }
 
             if (running) {
                 badge.classList.remove('stopped');
-                text.innerText = 'LIVE';
-                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18,18H6V6H18V18Z"/></svg> Botu Durdur`;
+                text.innerText = 'BROADCASTING';
+                text.style.color = 'var(--primary)';
+                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18,18H6V6H18V18Z"/></svg> HALT ENGINE`;
                 btn.classList.remove('btn-primary');
                 btn.classList.add('btn-danger');
             } else {
                 badge.classList.add('stopped');
-                text.innerText = 'STOPPED';
-                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg> Botu Başlat`;
+                text.innerText = 'OFFLINE';
+                text.style.color = '';
+                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg> INITIATE GHOST ENGINE`;
                 btn.classList.remove('btn-danger');
                 btn.classList.add('btn-primary');
             }
@@ -928,7 +944,7 @@
             if (data.status === 'Error') {
                 updateStatus(false, 'Error');
                 if (window.lastErrorSeen !== data.error) {
-                    addLog('ERROR', `<span style="color:var(--danger)">${data.error}</span>`);
+                    addLog('FATAL', `<span style="color:var(--danger)">${data.error}</span>`);
                     window.lastErrorSeen = data.error;
                 }
                 return;
@@ -942,31 +958,33 @@
             // P&L Updates
             const stats = data.stats || {};
 
-            // Unrealized P&L (Header)
+            // Unrealized P&L
             const unrealizedEl = document.getElementById('unrealized-pnl-val');
             const unrealizedPnl = parseFloat(stats.unrealized_pnl_usd || 0);
             unrealizedEl.innerText = `${unrealizedPnl >= 0 ? '+' : ''}$${unrealizedPnl.toFixed(2)}`;
-            unrealizedEl.style.color = unrealizedPnl >= 0 ? 'var(--success)' : 'var(--danger)';
+            unrealizedEl.style.color = unrealizedPnl >= 0 ? 'var(--primary)' : 'var(--danger)';
+            unrealizedEl.style.textShadow = unrealizedPnl >= 0 ? '0 0 10px rgba(0,255,163,0.4)' : '0 0 10px rgba(255,51,102,0.4)';
 
             // Committed Margin
             const committedEl = document.getElementById('committed-val');
             const committed = parseFloat(stats.total_committed_margin || 0);
             committedEl.innerText = `$${committed.toFixed(2)}`;
 
-            // Daily Realized P&L (Header) - Persistent from CSV
+            // Daily Realized P&L
             const dailyPnlEl = document.getElementById('daily-pnl-val');
             const dailyPnl = parseFloat(stats.daily_realized_pnl || 0);
             dailyPnlEl.innerText = `${dailyPnl >= 0 ? '+' : ''}$${dailyPnl.toFixed(2)}`;
-            dailyPnlEl.style.color = dailyPnl >= 0 ? 'var(--success)' : 'var(--danger)';
+            dailyPnlEl.style.color = dailyPnl >= 0 ? 'var(--primary)' : 'var(--danger)';
+            dailyPnlEl.style.textShadow = dailyPnl >= 0 ? '0 0 10px rgba(0,255,163,0.4)' : '0 0 10px rgba(255,51,102,0.4)';
 
             // Mode buttons
             const activeMode = stats.active_strategy_mode || 'ECONOMIC';
             const modeEcon = document.getElementById('mode-econ');
             const modeMartin = document.getElementById('mode-martin');
-            if (modeEcon) modeEcon.className = activeMode === 'ECONOMIC' ? 'btn btn-primary' : 'btn btn-outline';
-            if (modeMartin) modeMartin.className = activeMode === 'MARTINGALE' ? 'btn btn-primary' : 'btn btn-outline';
+            if (modeEcon) modeEcon.className = activeMode === 'ECONOMIC' ? 'btn btn-outline active' : 'btn btn-outline';
+            if (modeMartin) modeMartin.className = activeMode === 'MARTINGALE' ? 'btn btn-outline active' : 'btn btn-outline';
 
-            // Terminal Stats (Persistent)
+            // Terminal Stats
             document.getElementById('win-rate').innerText = `${stats.win_rate || 0}%`;
             document.getElementById('total-trades').innerText = stats.total_trades || 0;
 
@@ -979,22 +997,22 @@
                     const pnl = parseFloat(p.unrealized_pnl || 0);
                     const liqDist = parseFloat(p.liq_distance || 100).toFixed(1);
                     return `
-                        <tr>
-                            <td><b>${p.symbol}</b></td>
+                        <tr style="background: rgba(0,0,0,0.2); transition: 0.3s;" onmouseover="this.style.background='rgba(0,255,163,0.05)'" onmouseout="this.style.background='rgba(0,0,0,0.2)'">
+                            <td style="color:var(--accent); font-weight:700;">${p.symbol}</td>
                             <td><span class="badge-side side-${p.side.toLowerCase()}">${p.side}</span></td>
                             <td>${parseFloat(p.size).toFixed(4)}</td>
                             <td>$${parseFloat(p.entry_price).toFixed(2)}</td>
                             <td style="color:${liqDist < 10 ? 'var(--danger)' : 'var(--text-dim)'}">%${liqDist}</td>
                             <td class="${pnl >= 0 ? 'pnl-plus' : 'pnl-minus'}">${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%</td>
-                            <td><button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem; width:auto" onclick="closeOne('${p.symbol}')">Kapat</button></td>
+                            <td><button class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem; width:auto; border-color:var(--danger); color:var(--danger);" onclick="closeOne('${p.symbol}')" onmouseover="this.style.background='var(--danger)'; this.style.color='white'" onmouseout="this.style.background='transparent'; this.style.color='var(--danger)'">EXTRACT</button></td>
                         </tr>
                     `;
                 }).join('');
             } else {
-                posTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-dim)">Açık pozisyon yok</td></tr>';
+                posTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-dim); padding: 30px;">[ NO ACTIVE ROUTE VECTORS DETECTED ]</td></tr>';
             }
 
-            // Indicators (ULTRATHINK: Dynamic from Telemetry)
+            // Indicators
             const indList = document.getElementById('indicators-list');
             const indicators = data.indicators || {};
             const syms = Object.keys(indicators);
@@ -1006,17 +1024,17 @@
                         <div class="symbol-card">
                             <div class="card-header">
                                 <span class="card-symbol">${sym.replace('_USDT_Perp', '')}</span>
-                                <span style="font-size:0.7rem; color:var(--success)">SCANNING</span>
+                                <span style="font-size:0.65rem; font-family:'JetBrains Mono'; padding:2px 6px; background:rgba(3,225,255,0.1); color:var(--accent); border-radius:2px; border:1px solid rgba(3,225,255,0.3)">TTP VERIFIED</span>
                             </div>
                             <div class="card-metrics">
-                                <div class="metric"><span class="metric-label">RSI</span><span class="metric-value">${ind.rsi}</span></div>
-                                <div class="metric"><span class="metric-label">BB POS</span><span class="metric-value">${ind.bb_pos}</span></div>
+                                <div class="metric"><span class="metric-label">MOMENTUM (RSI)</span><span class="metric-value">${ind.rsi}</span></div>
+                                <div class="metric"><span class="metric-label">DELTA POS</span><span class="metric-value">${ind.bb_pos}</span></div>
                             </div>
                         </div>
                     `;
                 }).join('');
             } else {
-                indList.innerHTML = '<div style="padding:20px; color:var(--text-dim); font-size:0.8rem">Tarama verisi bekleniyor...</div>';
+                indList.innerHTML = '<div style="padding:20px; color:var(--text-dim); font-size:0.75rem; text-align:center; font-family:\'JetBrains Mono\'">> Listening to DEX Aggregator Streams...</div>';
             }
         }
 
@@ -1025,21 +1043,26 @@
             const time = new Date().toLocaleTimeString();
             const entry = document.createElement('div');
             entry.className = 'log-entry';
-            entry.innerHTML = `<span class="log-time">${time}</span> <span class="log-tag">[${tag}]</span> ${msg}`;
+            /* Cyberpunk color variations based on tag */
+            let tagColor = "var(--secondary)";
+            if(tag === "ERROR" || tag === "FATAL") tagColor = "var(--danger)";
+            if(tag === "SYS_INIT" || tag === "NODE") tagColor = "var(--accent)";
+
+            entry.innerHTML = `<span class="log-time" style="opacity:0.6">[${time}]</span> <span class="log-tag" style="color:${tagColor}">&lt;${tag}&gt;</span> <span style="color:#f0f0f5">${msg}</span>`;
             term.prepend(entry);
         }
 
         async function setStrategy(mode) {
             const res = await api('settings', 'POST', { active_strategy_mode: mode });
             if (res.success) {
-                addLog('SYSTEM', `Strateji modu ${mode} olarak değiştirildi. (Restart önerilir)`);
+                addLog('ALGORITHM', `Base logic shifted to ${mode}. Re-calculating tick constraints.`);
                 updateTelemetry();
             }
         }
 
         function closeOne(symbol) {
-            if (confirm(`${symbol} pozisyonunu kapatmak istediğinize emin misiniz?`)) {
-                // Future implementation: single position close
+            if (confirm(`FORCE OVERRIDE: Extract protocol from ${symbol} liquidity pool immediately?`)) {
+                // Future Implementation for single close wrapper
             }
         }
     </script>

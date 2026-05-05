@@ -1,4 +1,6 @@
-import os
+﻿import os
+import warnings
+warnings.filterwarnings('ignore', category=DeprecationWarning)
 import subprocess
 import signal
 import json
@@ -15,16 +17,16 @@ from settings_manager import load_settings, save_settings
 # Ensure we're in the right directory
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-# Log rotation settings - KÜÇÜK DOSYALAR (PC'yi yormaz)
+# Log rotation settings - KÃœÃ‡ÃœK DOSYALAR (PC'yi yormaz)
 import config
 WEBUI_LOG_FILE = config.WEBUI_LOG_FILE
 LOG_MAX_SIZE_MB = 1  # 1 MB'da rotate
 LOG_ROTATION_HOURS = 1  # Her 1 saatte rotate
-LOG_KEEP_COUNT = 24  # Son 24 dosya = 24 saat geçmişi
+LOG_KEEP_COUNT = 24  # Son 24 dosya = 24 saat geÃ§miÅŸi
 last_log_rotation = time.time()
 
 def rotate_webui_log():
-    """Log dosyasını rotate et - hem UI hem de BOT loglarını yönetir"""
+    """Log dosyasÄ±nÄ± rotate et - hem UI hem de BOT loglarÄ±nÄ± yÃ¶netir"""
     global last_log_rotation
     
     for log_to_rotate in [WEBUI_LOG_FILE, config.BOT_LOG_FILE]:
@@ -40,7 +42,7 @@ def rotate_webui_log():
                 archive_name = f"{prefix}_{timestamp}.txt"
                 
                 os.rename(log_to_rotate, archive_name)
-                print(f"   ✅ Log arşivlendi: {archive_name}")
+                print(f"   âœ… Log arÅŸivlendi: {archive_name}")
                 last_log_rotation = time.time()
         except: pass
 
@@ -187,7 +189,7 @@ def index():
 
 @app.route('/manual')
 def manual():
-    """Bot kullanım kılavuzunu sunar"""
+    """Bot kullanÄ±m kÄ±lavuzunu sunar"""
     current_dir = os.path.dirname(os.path.abspath(__file__))
     template_path = os.path.join(current_dir, 'templates', 'manual.html')
     if os.path.exists(template_path):
@@ -311,7 +313,7 @@ def get_telemetry():
 def close_all():
     global bot_instance
     if not bot_instance:
-        return jsonify({"success": False, "message": "Bot çalışmıyor."})
+        return jsonify({"success": False, "message": "Bot calismÄ±yor."})
     
     try:
         # We need to run the async method in the loop of the bot thread
@@ -323,7 +325,7 @@ def close_all():
         
         # Simple implementation: bot_instance has a flag 'emergency_close'
         bot_instance.emergency_close_triggered = True
-        return jsonify({"success": True, "message": "Pozisyon kapatma komutu gönderildi."})
+        return jsonify({"success": True, "message": "Pozisyon kapatma komutu gÃ¶nderildi."})
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
@@ -331,7 +333,7 @@ def close_all():
 def cancel_all():
     global bot_instance
     if not bot_instance:
-        return jsonify({"success": False, "message": "Bot çalışmıyor."})
+        return jsonify({"success": False, "message": "Bot calismÄ±yor."})
     
     try:
         result = bot_instance.cancel_all_orders()
@@ -377,10 +379,10 @@ bot_instance = None
 def start_bot():
     global bot_thread, bot_instance, bot_startup_error
     if is_bot_running():
-        return jsonify({"success": False, "message": "Bot zaten çalışıyor."})
+        return jsonify({"success": False, "message": "Bot zaten calisÄ±yor."})
     
     try:
-        print("[WebUI] Bot başlatılıyor (Thread Mode)...")
+        print("[WebUI] Bot baÅŸlatÄ±lÄ±yor (Thread Mode)...")
         bot_startup_error = None # Clear old errors
         
         # settings load trigger to config
@@ -407,7 +409,7 @@ def start_bot():
                 print("[WebUI] Starting bot event loop...")
                 asyncio.run(bot_instance.run())
             except Exception as e:
-                err_msg = str(e) or "Bilinmeyen bir hata oluştu."
+                err_msg = str(e) or "Bilinmeyen bir error occurred."
                 print(f"[BOT THREAD FATAL ERROR] {err_msg}")
                 traceback.print_exc()
                 bot_startup_error = err_msg
@@ -416,10 +418,10 @@ def start_bot():
         bot_thread = threading.Thread(target=thread_target, daemon=True)
         bot_thread.start()
         
-        return jsonify({"success": True, "message": "Bot başlatma komutu verildi. Durum panelini izleyin."})
+        return jsonify({"success": True, "message": "Bot baÅŸlatma komutu verildi. Durum panelini izleyin."})
     except Exception as e:
         bot_startup_error = str(e)
-        return jsonify({"success": False, "message": f"Başlatma hatası: {str(e)}"}), 500
+        return jsonify({"success": False, "message": f"BaÅŸlatma hatasÄ±: {str(e)}"}), 500
 
 @app.route('/api/bot/stop', methods=['POST'])
 def stop_bot():
@@ -427,7 +429,7 @@ def stop_bot():
     
     # Check both thread and process (for backward compat)
     if not is_bot_running() and not (bot_thread and bot_thread.is_alive()):
-        return jsonify({"success": False, "message": "Bot zaten durmuş durumda."})
+        return jsonify({"success": False, "message": "Bot zaten durmuÅŸ durumda."})
     
     try:
         # 1. Stop Thread Bot
@@ -457,21 +459,33 @@ def stop_bot():
         # Give OS a moment to release file handles (bot.lock)
         time.sleep(1.5)
             
-        return jsonify({"success": True, "message": "Bot durduruldu. Yeni ayarlar bir sonraki başlatmada geçerli olacaktır."})
+        return jsonify({"success": True, "message": "Bot durduruldu. Yeni ayarlar bir sonraki baÅŸlatmada geÃ§erli olacaktÄ±r."})
     except Exception as e:
-        return jsonify({"success": False, "message": f"Hata: {str(e)}"}), 500
+        return jsonify({"success": False, "message": f"Fatal Error: {str(e)}"}), 500
 
 if __name__ == '__main__':
     if not os.path.exists('templates'):
         os.makedirs('templates')
     
-    print(r"    ____       _     ____        _     ____            ")
-    print(r"   |  _ \ ___ (_)___| __ )  ___ | |_  |  _ \ _ __ ___  ")
-    print(r"   | |_) / _ \| / __|  _ \ / _ \| __| | |_) | '__/ _ \ ")
-    print(r"   |  _ <  __/| \__ \ |_) | (_) | |_  |  __/| | | (_) |")
-    print(r"   |_| \_\___||_|___/____/ \___/ \__| |_|   |_|  \___/  ")
+    import warnings
+    warnings.filterwarnings('ignore', category=DeprecationWarning)
+    # Fix encoding for Windows Terminal
+    import sys, io
+    if sys.platform == 'nt':
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+
+        print(r"    ____ _               _      _                    _   ")
+    print(r"   / ___| |__   ___  ___| |_   / \   __ _  ___ _ __ | |_ ")
+    print(r"  | |  _| '_ \ / _ \/ __| __| / _ \ / _` |/ _ \ '_ \| __|")
+    print(r"  | |_| | | | | (_) \__ \ |_ / ___ \ (_| |  __/ | | | |_ ")
+    print(r"   \____|_| |_|\___/|___/\__/_/   \_\__, |\___|_| |_|\__|")
+    print(r"                                    |___/                ")
+
+    print(r"  | |  _| '_ \ / _ \/ __| __| / _ \ / _` |/ _ \ '_ \| __|")
+
     print("\n" + "="*55)
-    print(f"       🌐 REISBOT PRO CONTROL CENTER")
+    print(f"       🌐 GHOSTAGENT EXECUTION PROTOCOL CONTROL CENTER")
     print(f"       Dashboard: http://127.0.0.1:{config.WEB_UI_PORT}")
     print("="*55)
     
@@ -479,7 +493,7 @@ if __name__ == '__main__':
     def auto_start_bot():
         import time
         time.sleep(3)  # Wait for Flask to fully start
-        print("[AutoStart] Bot otomatik başlatılıyor...")
+        print("[AutoStart] Bot otomatik baslatiliyor...")
         
         global bot_thread, bot_instance, bot_startup_error
         if not is_bot_running():
@@ -499,13 +513,13 @@ if __name__ == '__main__':
                         if os.name == 'nt':
                             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
                         
-                        print("[AutoStart] Bot instance oluşturuluyor...")
+                        print("[AutoStart] Bot instance olusturuluyor...")
                         bot_instance = bot.CryptoScalpingBot()
                         
-                        print("[AutoStart] Bot event loop başlatılıyor...")
+                        print("[AutoStart] Bot event loop baslatiliyor...")
                         asyncio.run(bot_instance.run())
                     except Exception as e:
-                        err_msg = str(e) or "Bilinmeyen bir hata oluştu."
+                        err_msg = str(e) or "Bilinmeyen bir error occurred."
                         print(f"[BOT THREAD FATAL ERROR] {err_msg}")
                         traceback.print_exc()
                         bot_startup_error = err_msg
@@ -513,11 +527,11 @@ if __name__ == '__main__':
 
                 bot_thread = threading.Thread(target=thread_target, daemon=True)
                 bot_thread.start()
-                print("[AutoStart] ✅ Bot başarıyla başlatıldı!")
+                print("[AutoStart] ✅ Bot basariyla baslatildi!")
             except Exception as e:
-                print(f"[AutoStart] ❌ Bot başlatma hatası: {e}")
+                print(f"[AutoStart] ❌ Bot baslatma hatasi: {e}")
         else:
-            print("[AutoStart] Bot zaten çalışıyor.")
+            print("[AutoStart] Bot zaten calisiyor.")
     
     # Start auto-start in background thread
     auto_start_thread = threading.Thread(target=auto_start_bot, daemon=True)
@@ -546,8 +560,8 @@ if __name__ == '__main__':
                     last_restart_time = time.strftime("%Y-%m-%d %H:%M:%S")
                     
                     print(f"\n{'='*60}")
-                    print(f"🔄 [WATCHDOG] Bot durmuş tespit edildi!")
-                    print(f"   Yeniden başlatma #{watchdog_restart_count} - {last_restart_time}")
+                    print(f"🔄 [WATCHDOG] Bot durmus tespit edildi!")
+                    print(f"   Yeniden baslatma #{watchdog_restart_count} - {last_restart_time}")
                     print(f"{'='*60}\n")
                     
                     # Restart the bot
@@ -567,13 +581,13 @@ if __name__ == '__main__':
                                 if os.name == 'nt':
                                     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
                                 
-                                print("[WATCHDOG] Bot instance oluşturuluyor...")
+                                print("[WATCHDOG] Bot instance olusturuluyor...")
                                 bot_instance = bot.CryptoScalpingBot()
                                 
-                                print("[WATCHDOG] Bot event loop başlatılıyor...")
+                                print("[WATCHDOG] Bot event loop baslatiliyor...")
                                 asyncio.run(bot_instance.run())
                             except Exception as e:
-                                err_msg = str(e) or "Bilinmeyen bir hata oluştu."
+                                err_msg = str(e) or "Bilinmeyen bir error occurred."
                                 print(f"[WATCHDOG BOT ERROR] {err_msg}")
                                 traceback.print_exc()
                                 bot_startup_error = err_msg
@@ -581,7 +595,7 @@ if __name__ == '__main__':
 
                         bot_thread = threading.Thread(target=thread_target, daemon=True)
                         bot_thread.start()
-                        print("[WATCHDOG] ✅ Bot yeniden başlatıldı!")
+                        print("[WATCHDOG] ✅ Bot yeniden baslatildi!")
                         
                         # Clear any previous error after successful restart
                         time.sleep(5)
@@ -589,7 +603,7 @@ if __name__ == '__main__':
                             bot_startup_error = None
                             
                     except Exception as e:
-                        print(f"[WATCHDOG] ❌ Yeniden başlatma hatası: {e}")
+                        print(f"[WATCHDOG] ❌ Yeniden baslatma hatasi: {e}")
                         
             except Exception as e:
                 print(f"[WATCHDOG] Thread error: {e}")
@@ -601,4 +615,3 @@ if __name__ == '__main__':
     # ============================================================
     
     app.run(debug=False, port=config.WEB_UI_PORT, host='0.0.0.0')
-

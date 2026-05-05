@@ -34,7 +34,7 @@ class RiskManager:
         self.operation_locks = set() # Set of symbols currently being traded (FIX BUG #Q04)
         self.exchange_adapter = None # Will be linked by the bot
         
-        # --- PENDING ORDERS SYSTEM (REIS PROFESSIONAL) ---
+        # --- PENDING ORDERS SYSTEM (GHOST PROFESSIONAL) ---
         # symbol -> { 'orders': [{'level': price, 'amount_usd': amt, 'type': 'ADD'|'TRIM', 'placed': bool, 'order_id': str}] }
         self.pending_orders = {}
         
@@ -54,7 +54,7 @@ class RiskManager:
         self._load_history_from_csv()
 
     def check_circuit_breaker(self) -> bool:
-        """Kayıp limiti kontrolü (Reis Stratejisi için devre dışı)"""
+        """Kayıp limiti kontrolü (Ghost Stratejisi için devre dışı)"""
         return False
 
     def check_volume_guardrails(self) -> Dict:
@@ -260,7 +260,7 @@ class RiskManager:
             threshold = getattr(config, 'MAX_SPREAD_BPS_QUALITY', 5.0) if mode == "PROFIT_CORE" else getattr(config, 'MAX_SPREAD_BPS_VOLUME', 10.0)
             min_liq = getattr(config, 'MIN_LIQUIDITY_USD', 1000.0)
 
-            # [REIS RECOVERY] Loosen spread/liquidity gates for layering
+            # [GHOST RECOVERY] Loosen spread/liquidity gates for layering
             recovery_spread_threshold = 30.0 # Allow up to 30bps for recovery
             recovery_liq_threshold = 250.0   # Lower liq floor for recovery
             
@@ -295,7 +295,7 @@ class RiskManager:
         available_balance = self.get_free_balance()
         total_balance = self.get_balance()
         
-        # --- REIS STRATEGY SIZING (FIXED USD MODE) ---
+        # --- GHOST STRATEGY SIZING (FIXED USD MODE) ---
         
         # [VIP STRATEGY] TON/USDT ÖZEL TARİFE (Kullanıcı İsteği: 15+8+8+15)
         if symbol == "TON/USDT" or symbol == "TON_USDT_Perp":
@@ -307,11 +307,11 @@ class RiskManager:
                 added_count = max(0, len(layers) - 1)
                 
                 if added_count == 0: 
-                    margin_amount_usd = 8.0  # Kademe 1
+                    margin_amount_usd = 8.0  # Tier 1
                 elif added_count == 1: 
-                    margin_amount_usd = 8.0  # Kademe 2
+                    margin_amount_usd = 8.0  # Tier 2
                 else: 
-                    margin_amount_usd = 15.0 # Kademe 3+
+                    margin_amount_usd = 15.0 # Tier 3+
                 
                 tag = f"LAYER_{added_count+1} (TON_VIP)"
                 
@@ -335,7 +335,7 @@ class RiskManager:
                 tag = f"LAYER_{layer_index} ({getattr(config, 'ACTIVE_STRATEGY_MODE', 'ECON')})"
             
         # --- [DYNAMIC SCALING] ---
-        if getattr(config, 'REIS_AUTO_SCALE_ENABLED', False):
+        if getattr(config, 'GHOST_AUTO_SCALE_ENABLED', False):
             base_balance = getattr(config, 'INITIAL_BALANCE_USD', 100.0)
             if base_balance > 0:
                 scaling_multiplier = total_balance / base_balance
@@ -356,7 +356,7 @@ class RiskManager:
         
         if margin_amount_usd > available_balance:
             print(f"   [WARNING] [{symbol}] Yetersiz bakiye (${margin_amount_usd:.2f}). Mevcut: {available_balance:.2f}")
-            # En azından kalanı kullanmaya çalış (Reis bazen kasanın dibine kadar girer)
+            # En azından kalanı kullanmaya çalış (Ghost bazen kasanın dibine kadar girer)
             margin_amount_usd = available_balance * 0.95 
             if margin_amount_usd < min_allowed: return 0.0
 
@@ -368,8 +368,8 @@ class RiskManager:
         risk_pct = margin_amount_usd / total_balance if total_balance > 0 else 0
         
         if getattr(config, 'VERBOSE_LOGGING', True):
-            print(f"   [REIS_SIZING] {symbol} | {tag} | Balance: ${total_balance:.2f} | Entry: %{risk_pct*100:.1f} | Margin: ${margin_amount_usd:.2f}")
-            print(f"   [REIS_SIZING] {symbol} | Leverage: {config.LEVERAGE}x | Total Value: ${position_value_usd:.2f} | Quantity: {position_size:.4f}")
+            print(f"   [GHOST_SIZING] {symbol} | {tag} | Balance: ${total_balance:.2f} | Entry: %{risk_pct*100:.1f} | Margin: ${margin_amount_usd:.2f}")
+            print(f"   [GHOST_SIZING] {symbol} | Leverage: {config.LEVERAGE}x | Total Value: ${position_value_usd:.2f} | Quantity: {position_size:.4f}")
         
         min_coin_size = getattr(config, 'MIN_TRADE_SIZE_COIN', 0.001)
         if position_size < min_coin_size:
@@ -585,7 +585,7 @@ class RiskManager:
                     if 'trailing_sl' not in existing_pos:
                         existing_pos['trailing_sl'] = existing_pos.get('stop_loss', p['entry_price'])
                     
-                    # [REIS FIX] Ensure position_layers is ALWAYS initialized for existing positions too!
+                    # [GHOST FIX] Ensure position_layers is ALWAYS initialized for existing positions too!
                     if symbol not in self.position_layers or len(self.position_layers[symbol]) == 0:
                         self.position_layers[symbol] = [{
                             'price': existing_pos['entry_price'],
@@ -599,7 +599,7 @@ class RiskManager:
 
             if not existing_pos:
                 # CRITICAL SAFETY: Validate Position Size before Adoption
-                # INCREASED for Reis Strategy (10% entry on $1k balance = $2k+ position value)
+                # INCREASED for Ghost Strategy (10% entry on $1k balance = $2k+ position value)
                 position_value_usd = p['entry_price'] * p['position_size']
                 max_safety_val = 5000.0 # Hard global safety cap
                 if position_value_usd > max_safety_val:
@@ -631,14 +631,14 @@ class RiskManager:
                     total_margin = position_value_usd / leverage
                     
                     # Get base margin from config or settings.json
-                    initial_margin = float(getattr(config, 'REIS_INITIAL_MARGIN_USD', 10.0))
+                    initial_margin = float(getattr(config, 'GHOST_INITIAL_MARGIN_USD', 10.0))
                     
                     # Logic: Current Value / (Margin * Leverage) gives rough layer count
                     # We use a 0.5x buffer to avoid over-counting due to small price swings
                     layers_to_add = max(1, int((total_margin + (initial_margin / 2)) / initial_margin))
                     
                     # Cap by max allowed layers
-                    max_allowed = int(getattr(config, 'MAX_KADEME_COUNT', 3)) + 1 # +1 for initial
+                    max_allowed = int(getattr(config, 'MAX_TIER_COUNT', 3)) + 1 # +1 for initial
                     layers_to_add = min(layers_to_add, max_allowed)
                     
                     # Initialize with placeholders
@@ -661,7 +661,7 @@ class RiskManager:
                      tp_order_id: str = None, sl_order_id: str = None,
                      entry_intent: str = "TAKER", exit_intent: str = "TAKER") -> Dict:
         # CRITICAL SAFETY: Final Size Check
-        # INCREASED for Reis Strategy (10% entry = larger position values)
+        # INCREASED for Ghost Strategy (10% entry = larger position values)
         pos_value_usd = entry_price * size
         max_safety_val = 5000.0 # Hard global safety cap
         
@@ -760,7 +760,7 @@ class RiskManager:
         pos['position_size'] = total_size
         pos['entry_value_usd'] = new_avg * total_size
         
-        print(f"   [LAYER_ADD] [{symbol}] KADEME EKLENDİ! Yeni Ortalama: ${new_avg:.4f} | Toplam Büyüklük: {total_size:.4f}")
+        print(f"   [LAYER_ADD] [{symbol}] TIER EKLENDİ! Yeni Ortalama: ${new_avg:.4f} | Toplam Büyüklük: {total_size:.4f}")
 
     def get_trim_info(self, symbol: str) -> Optional[Dict]:
         """Get info for 'Trim at Cost' - size and price to close the last layer."""
@@ -844,7 +844,7 @@ class RiskManager:
                         pos['trailing_sl'] = pos['entry_price'] - round_trip_fee_dist
                         
                     pos['breakeven_triggered'] = True
-                    print(f"🛡️ [{symbol}] BREAK-EVEN AKTİF: Stop girişe çekildi.")
+                    print(f"🛡️ [{symbol}] BREAK-EVEN ACTIVE: Stop girişe çekildi.")
 
                 # --- [ULTRATHINK] DELAYED TRAILING STOP ---
                 # Sadece kâr %0.5'i geçince takip etmeye başla.
@@ -1151,7 +1151,7 @@ class RiskManager:
                 if pos['symbol'] == symbol:
                     return False
 
-        # 1. Overall Exposure Check (Disabled for Reis Strategy)
+        # 1. Overall Exposure Check (Disabled for Ghost Strategy)
         # We still keep a very high fallback to prevent total liquidations
         margin_in_use = sum((p['entry_price'] * p['position_size']) / config.LEVERAGE for p in self.positions)
         if margin_in_use >= self.get_balance() * 0.95: # 95% limit for extreme safety
@@ -1298,7 +1298,7 @@ class RiskManager:
         
         print("="*60 + "\n")
 
-    # ========== PENDING ORDERS MANAGEMENT (REIS PROFESSIONAL) ==========
+    # ========== PENDING ORDERS MANAGEMENT (GHOST PROFESSIONAL) ==========
     
     def create_pending_layer_order(self, symbol: str, level: float, amount_usd: float, order_type: str = "ADD"):
         """
@@ -1340,7 +1340,7 @@ class RiskManager:
             self.pending_orders[symbol]['orders'].clear()
             print(f"   [OK] [{symbol}] Tüm pending emirler iptal edildi")
 
-    # ========== DYNAMIC TP CALCULATION (REIS PROFESSIONAL) ==========
+    # ========== DYNAMIC TP CALCULATION (GHOST PROFESSIONAL) ==========
     
     def cancel_pending_orders_on_tp_hit(self, symbol: str):
         """
@@ -1355,8 +1355,8 @@ class RiskManager:
         Sembol için ortalama giriş fiyatını hesapla (tüm kademeler birlikte)
         
         Örnek:
-        - Kademe 1: 100 USDT @ $100 → Toplam: $10,000
-        - Kademe 2: 5 USDT @ $98 → Toplam: $490
+        - Tier 1: 100 USDT @ $100 → Toplam: $10,000
+        - Tier 2: 5 USDT @ $98 → Toplam: $490
         - Toplam Büyüklük: 10 + 5 = 15 USDT
         - Ortalama Giriş: $10,490 / 15 = $699.33
         """
@@ -1420,13 +1420,13 @@ class RiskManager:
         
         Senaryo:
         - Girdik: 100 @ 10 USDT
-        - 2. Kademe: 98 @ 5 USDT
-        - 3. Kademe: 97 @ 5 USDT
+        - 2. Tier: 98 @ 5 USDT
+        - 3. Tier: 97 @ 5 USDT
         - Ortalama: 99.33 USDT
         
         Fiyat 99.33'e döndüğünde:
-        - 3. Kademe (97 @ 5 USDT) ve 2. Kademe (98 @ 5 USDT) çıkart
-        - İlk Kademe (100 @ 10 USDT) TP için kalsın
+        - 3. Tier (97 @ 5 USDT) ve 2. Tier (98 @ 5 USDT) çıkart
+        - İlk Tier (100 @ 10 USDT) TP için kalsın
         """
         layers = self.position_layers.get(symbol, [])
         if len(layers) <= 1:
@@ -1470,7 +1470,7 @@ class RiskManager:
         # Artık sadece ilk giriş kalsın, ama ortalama giriş fiyatı güncellenmiş olabilir
         avg_at_trim = self.calculate_average_entry_price(symbol)
         
-        # [REIS FIX] After trim, the ONLY remaining layer is the first one, 
+        # [GHOST FIX] After trim, the ONLY remaining layer is the first one, 
         # but its baseline (first_entry_price) MUST BE RESET to the price where we started after trim.
         # This allows recursive layering based on the "New Home" price.
         self.position_layers[symbol] = [{
@@ -1509,7 +1509,7 @@ class RiskManager:
             symbol: Trading pair
             current_price: Şu anki fiyat
             direction: 'BUY' (long) veya 'SELL' (short)
-            layer_threshold_pct: Kademe seviyesi (0.02 = %2)
+            layer_threshold_pct: Tier seviyesi (0.02 = %2)
         
         Döner: Sonraki kademe seviyesi
         """
@@ -1524,9 +1524,9 @@ class RiskManager:
             # Long: fiyat kaç katman aşağıda?
             distance_pct = (first_entry_price - current_price) / first_entry_price
             
-            if distance_pct >= layer_threshold_pct * 2:  # 4. Kademe seviyesi (-4%)
+            if distance_pct >= layer_threshold_pct * 2:  # 4. Tier seviyesi (-4%)
                 next_level = first_entry_price * (1 - layer_threshold_pct * 2)
-            elif distance_pct >= layer_threshold_pct:  # 2-3. Kademe seviyesi (-2%)
+            elif distance_pct >= layer_threshold_pct:  # 2-3. Tier seviyesi (-2%)
                 next_level = first_entry_price * (1 - layer_threshold_pct)
             else:
                 next_level = None
@@ -1557,11 +1557,11 @@ class RiskManager:
         layer_count = len(layers)
         
         if layer_count == 1:
-            amount = 5.0  # 2. Kademe
+            amount = 5.0  # 2. Tier
         elif layer_count == 2:
-            amount = 5.0  # 3. Kademe
+            amount = 5.0  # 3. Tier
         else:
-            amount = 10.0  # 4+ Kademe
+            amount = 10.0  # 4+ Tier
         
         self.create_pending_layer_order(symbol, next_level, amount, order_type="ADD")
 
