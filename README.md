@@ -1,51 +1,59 @@
-# GhostAgent: Autonomous Trading Protocol on Solana
-**Colosseum Solana Frontier Hackathon Submission - 2026**
-*Powered by Reis Architecture*
+<div align="center">
+  <img src="GhostAgent_logo.png" alt="GhostAgent Logo" width="300"/>
+  <h1>👻 GhostAgent Protocol</h1>
+  <p><strong>Advanced High-Frequency Trading (HFT) Execution Engine for Solana</strong></p>
+  <p><i>Submission for the Colosseum Solana Frontier Hackathon - 2026</i></p>
+</div>
 
-![GhostAgent Banner](https://via.placeholder.com/1000x300?text=GhostAgent:+Sub-second+DeFi+Execution+on+Solana)
+---
 
-An autonomous AI agent natively built to leverage Solana's unparalleled speed and imperceptible transaction costs. Managing risk without human intervention, identifying micro-arbitrage opportunities, and executing scalping strategies within milliseconds.
+## 🌌 Vision & Abstract
 
-## 🌟 Why We Built on Solana
-High-frequency automated trading requires sub-second execution and negligible fees. Traditional blockchains make this mathematically impossible. **Solana is the only ecosystem where GhostAgent can truly thrive.** Sub-second block times allow our agent's *TTP Ghost Engine* to react to sudden liquidity shifts, while fractions of a cent in fees mean micro-margins instantly become pure profit.
+In the fast-paced ecosystem of Decentralized Finance, retail traders consistently fall victim to toxic flow, front-running, and high-latency execution. **GhostAgent Protocol** is designed as a counter-measure: an automated, sub-second HFT scalping engine built natively to leverage Solana’s unparalleled finality.
 
-## 🚀 Core Technologies (Reis Architecture V3 Elite)
+High-frequency automated trading requires sub-second execution and negligible fees. Traditional blockchains make this mathematically impossible. **Solana is the only ecosystem where GhostAgent can truly thrive.** Sub-second block times allow our agent's *Ghost Engine* to react to sudden liquidity shifts, while fractions of a cent in fees mean micro-margins instantly become pure profit.
 
-### 1. The Autonomous Agent (LLM & Algorithmic Router)
-Unlike rigid programmatic bots, GhostAgent uses multi-timeframe confirmation (RSI cross-validation) combined with adaptive logic. It continuously parses DEX data to make enter/exit decisions dynamically.
+## ✨ Key Technical Features
 
-### 2. Sub-Millisecond Execution (Solana Router)
-Integrated directly via Jupiter Aggregator API blueprints, the agent bypasses slow UI layers. 
-- **Latency Tolerance:** Failsafe triggers if execution estimation exceeds 400ms.
-- **Slippage Control:** Dynamically adjusts accepted slippage based on Solana network congestion metrics.
-
-### 3. TTP Ghost Engine & Dynamic DCA Risk Management
-Derived from the elite-grade Reis Architecture, the agent features a proprietary layer-based Dollar Cost Averaging (DCA) and trailing stop system.
-- **TTP (Trailing Take Profit):** Locks in micro-profits aggressively.
-- **Ghost Layering:** Masks intent by slicing larger positions into lightning-fast micro-transactions across different Solana liquidity pools.
+- ⚡ **Sub-Second Execution & Telemetry:** Built specifically for Solana’s low-latency environment. Real-time monitoring of RSI, ADX, Bollinger Bands, and MACD overlays, ensuring trades are never executed against macro trends.
+- 🛡️ **HFT Tiers & Risk Management:** Implements dynamic 3-Tier risk profiling. From low-spread momentum breakouts to aggressive "Ghost" support/resistance fading, fully automated without human intervention.
+- 🕸️ **TTP Ghost Engine (Trailing Take Profit):** Derived from our elite proprietary architecture, the agent slices larger positions into lightning-fast micro-transactions across different Solana liquidity pools to lock in micro-profits aggressively.
+- 🎛️ **Cyberpunk Control UI:** A fully responsive, dark-themed Flask Web UI providing operators with live PnL monitoring, network routes, and one-click emergency extract buttons.
+- 🔒 **Adverse Selection Protection:** Built-in safeguards like Break-Even Resets and Micro-Momentum gates to minimize drawdowns during extreme network volatility.
 
 ## 🏗️ Architecture Stack
+
+GhostAgent operates on a decoupled architecture, ensuring that UI latency never blocks trade execution speeds.
+
 ```text
 bot.py                 → Main asynchronous event loop & Agent Brain
-strategy_router.py     → Signal generation & cross-validation engine
+strategy_router.py     → Signal generation & multi-timeframe cross-validation engine
 risk_manager.py        → Position sizing, dynamic DCA layers, P&L tracking
-exchanges/             → Solana/Jupiter Network adapters (simulated for live demo)
+exchanges/             → Solana Network adapters (simulated via Pacifica Protocol for live demo)
 web_ui.py              → Agentic monitoring dashboard providing real-time telemetry
 ```
 
-## 🛠️ Quick Start (Developer Setup)
+## 🚀 Quick Start (Judge / Reviewer Setup)
 
-1. Clone this repository to your local environment.
-2. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Run the Agent:
-   ```bash
-   python bot.py
-   ```
-4. Access the Real-Time Telemetry Dashboard:
-   Navigate to `http://localhost:5566` in your browser.
+> **Judge/Reviewer Note:** For the purpose of hackathon evaluation without genuine capital risk or RPC rate limits, the bot logic heavily utilizes `Testnet (Simulation Node)`. Simulated balances, Pacifica mock data, and latency parameters are currently active to demonstrate UI telemetry and algorithmic state management flawlessly.
 
-## 🎯 Hackathon Scope Note
-> **Note to Judges:** This repository contains the Hackathon build of `GhostAgent`. To protect commercial IP, certain proprietary tick tolerances and the exact enterprise-grade *TTP Ghost Engine* mathematical thresholds have been replaced with normalized variables. The framework elegantly demonstrates how AI agents can operate purely on-chain via the Solana ecosystem.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/garib7/GhostAgent.git
+   cd GhostAgent
+   ```
+2. **Install dependencies:**
+   ```bash
+   pip install flask flask-cors pandas
+   ```
+3. **Fire up the GhostEngine & UI:**
+   ```bash
+   python web_ui.py
+   ```
+4. **Access the Dashboard:**
+   Navigate to `http://127.0.0.1:5566` in your browser. Click the "Start" (Başlat) button via the UI to initiate the telemetry and background execution threads.
+
+---
+<div align="center">
+  <i>Developed with ❤️ for the Solana Frontier Hackathon</i>
+</div>
