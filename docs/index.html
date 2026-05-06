@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GhostAgent Protocol | Solana Frontier</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Outfit:wght@300;600;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #14F195; /* Solana Green */
+            --secondary: #9945FF; /* Solana Purple */
+            --accent: #03e1ff;
+            --bg: #050508;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --text: #f0f0f5;
+            --dim: #7f8ea3;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg);
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(153, 69, 255, 0.08), transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(20, 241, 149, 0.08), transparent 40%);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 60px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Header Section */
+        .header { text-align: center; margin-bottom: 50px; }
+
+        .logo-box {
+            width: 100px; height: 100px;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            border-radius: 20px;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 50px rgba(20, 241, 149, 0.2);
+            margin: 0 auto 30px auto;
+        }
+
+        h1 {
+            font-size: 4.5rem; font-weight: 900; margin: 0;
+            background: linear-gradient(to right, #fff, var(--primary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: -2px; line-height: 1.1;
+        }
+
+        .subtitle {
+            font-family: 'JetBrains Mono', monospace; font-size: 1.2rem;
+            color: var(--primary); margin-top: 15px; letter-spacing: 2px; text-transform: uppercase;
+        }
+
+        .description {
+            font-size: 1.25rem; color: var(--dim); line-height: 1.6;
+            max-width: 800px; margin: 30px auto; text-align: center;
+        }
+
+        .btn-group { display: flex; gap: 20px; justify-content: center; margin-bottom: 60px; flex-wrap: wrap; }
+
+        .btn {
+            padding: 16px 32px; border-radius: 8px; text-decoration: none;
+            font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1rem;
+            transition: all 0.3s; text-transform: uppercase; cursor: pointer;
+        }
+
+        .btn-primary { background: rgba(20, 241, 149, 0.1); color: var(--primary); border: 1px solid var(--primary); box-shadow: 0 0 15px rgba(20,241,149,0.1); }
+        .btn-primary:hover { background: var(--primary); color: #000; box-shadow: 0 0 30px rgba(20, 241, 149, 0.4); }
+
+        .btn-ghost { background: rgba(153, 69, 255, 0.1); color: var(--secondary); border: 1px solid var(--secondary); }
+        .btn-ghost:hover { background: var(--secondary); color: #fff; box-shadow: 0 0 30px rgba(153, 69, 255, 0.4); }
+
+        /* Terminal Section */
+        .terminal {
+            background: #0a0a0f; border: 1px solid rgba(20, 241, 149, 0.3);
+            border-radius: 12px; padding: 25px; width: 100%; max-width: 800px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); position: relative; margin-bottom: 60px;
+        }
+        .terminal-header {
+            position: absolute; top: 0; left: 0; right: 0; height: 30px;
+            background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; padding: 0 15px; gap: 8px;
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot:nth-child(1) { background: #ff5f56; } .dot:nth-child(2) { background: #ffbd2e; } .dot:nth-child(3) { background: #27c93f; }
+        .terminal-content { margin-top: 25px; min-height: 140px; color: var(--primary); }
+        .log-time { color: var(--dim); margin-right: 15px; }
+
+        /* Tech & Features Grid */
+        h2.section-title {
+            text-align: center; font-size: 2.5rem; margin: 40px 0 30px; color: #fff;
+        }
+
+        .features {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px; width: 100%; margin-bottom: 60px;
+        }
+
+        .card {
+            background: var(--panel-bg); border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 30px; border-radius: 16px; transition: transform 0.3s;
+        }
+        .card:hover { transform: translateY(-5px); border-color: rgba(20, 241, 149, 0.3); }
+
+        .card h3 { color: #fff; margin-top: 0; font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; color: var(--primary);}
+        .card p { font-size: 1rem; color: var(--dim); line-height: 1.6; }
+
+        /* Architecture List */
+        .info-grid {
+            display: flex; flex-direction: column; gap: 40px; width: 100%; max-width: 800px; margin-bottom: 60px;
+        }
+
+        .panel {
+            background: var(--panel-bg); padding: 35px; border-radius: 16px; border: 1px solid rgba(153, 69, 255, 0.2);
+        }
+        .panel h3 { color: var(--secondary); font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; margin-top: 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
+
+        .arch-list { list-style: none; padding: 0; margin: 0; }
+        .arch-list li { margin-bottom: 12px; font-size: 1rem; color: var(--dim); display: flex; gap: 10px; }
+        .arch-list li strong { color: var(--primary); font-family: 'JetBrains Mono'; min-width: 150px; display: inline-block;}
+
+        footer { text-align: center; padding: 40px; border-top: 1px solid rgba(255,255,255,0.05); font-family: 'JetBrains Mono'; color: var(--dim); font-size: 0.9rem; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-box">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="white">
+                    <path d="M12,2A9,9 0 0,1 21,11V21.5L18.5,19L16,21.5L13.5,19L11,21.5L8.5,19L6,21.5L3.5,19L1,21.5V11A9,9 0 0,1 10,2M12,4A7,7 0 0,0 5,11V18.17L6,17.17L8.5,19.67L11,17.17L13.5,19.67L16,17.17L18.5,19.67L19,18.17V11A7,7 0 0,0 12,4Z" />
+                </svg>
+            </div>
+            <h1>GhostAgent Protocol</h1>
+            <div class="subtitle">Advanced HFT Execution Engine on Solana</div>
+            <p class="description">Retail traders consistently fall victim to toxic flow, front-running, and high-latency execution. GhostAgent Protocol is the counter-measure: an automated, sub-second HFT scalping engine built natively to leverage Solana’s unparalleled finality.</p>
+        </div>
+
+        <div class="btn-group">
+            <a href="https://github.com/garib7/GhostAgent" target="_blank" class="btn btn-primary">GitHub Repository</a>
+            <!-- Button reserved for future Renaissance/Colosseum submission link -->
+            <a href="https://x.com/Rrutelya/status/2051637813783720390" target="_blank" class="btn btn-ghost">Twitter Announcement</a>
+        </div>
+
+        <!-- Animated Terminal -->
+        <div class="terminal">
+            <div class="terminal-header">
+                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            </div>
+            <div class="terminal-content" id="log-output">
+                <!-- JS will inject logs here -->
+            </div>
+        </div>
+
+        <!-- Value Proposition -->
+        <div class="features">
+            <div class="card">
+                <h3>Sub-Second Execution</h3>
+                <p>Built specifically for Solana’s low-latency environment. Real-time monitoring of RSI, ADX, Bollinger Bands, and MACD overlays. Sub-second block times allow our engine to react to sudden liquidity shifts before retail traders even see the candle.</p>
+            </div>
+            <div class="card">
+                <h3>TTP Ghost Engine</h3>
+                <p>Derived from elite proprietary architecture, the agent slices larger positions into lightning-fast micro-transactions across different Solana liquidity pools to lock in micro-profits aggressively via Trailing Take Profit (TTP) layers.</p>
+            </div>
+            <div class="card">
+                <h3>HFT Tiers & Risk Manage</h3>
+                <p>Implements dynamic 3-Tier risk profiling. From low-spread momentum breakouts to aggressive "Ghost" support/resistance fading, fully automated without human intervention. Built-in Adverse Selection Protection.</p>
+            </div>
+        </div>
+
+        <!-- Deep Dive Section -->
+        <h2 class="section-title">Decoupled Architecture</h2>
+
+        <div class="info-grid">
+            <div class="panel">
+                <h3>System Stack</h3>
+                <p style="color: var(--dim); font-size: 0.9rem; margin-bottom: 20px;">GhostAgent operates on a decoupled architecture, ensuring that UI latency never blocks trade execution speeds on Solana.</p>
+                <ul class="arch-list">
+                    <li><strong>bot.py</strong> <span>Main asynchronous event loop & Agent Brain</span></li>
+                    <li><strong>strategy_router.py</strong> <span>Signal generation & multi-timeframe cross-validation</span></li>
+                    <li><strong>risk_manager.py</strong> <span>Position sizing, dynamic DCA layers, P&L tracking</span></li>
+                    <li><strong>web_ui.py</strong> <span>Agentic monitoring dashboard providing real-time telemetry</span></li>
+                    <li><strong>exchanges/</strong> <span>Solana Network adapters (Pacifica Protocol mock)</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Built for the Colosseum Solana Frontier Hackathon 2026. Vibe Coding architecture.</p>
+        <p><a href="https://x.com/Rrutelya" style="color: var(--dim); text-decoration: none;">Follow the Director on X</a></p>
+    </footer>
+
+    <script>
+        // Terminal Mock Animation
+        const logs = [
+            "[SYSTEM] Booting GhostAgent Core...",
+            "[RPC] Establishing low-latency Solana RPC trunk... OK.",
+            "[🧠] Loading Neural Risk Models (strategy_router.py)...",
+            "[*] Scanning Solana Liquidity Pools (Raydium, Orca)...",
+            "[ROUTE] Micro-arbitrage gap detected. Volatility: High.",
+            "[-] Executing HFT swap via TTP Ghost Engine...",
+            "[SUCCESS] +0.22 SOL realized. Position closed under 400ms."
+        ];
+
+        const term = document.getElementById('log-output');
+        let index = 0;
+
+        function addLog() {
+            if(index >= logs.length) {
+                setTimeout(() => { term.innerHTML = ""; index = 0; addLog(); }, 5000);
+                return;
+            }
+
+            const p = document.createElement('div');
+            p.style.marginBottom = "8px";
+
+            let color = "#14F195"; // Solana Green
+            if(logs[index].includes("[SYSTEM]") || logs[index].includes("[RPC]")) color = "#9945FF"; // Solana Purple
+            if(logs[index].includes("Scanning")) color = "#7f8ea3";
+            if(logs[index].includes("SUCCESS")) color = "#03e1ff";
+
+            p.innerHTML = `<span class="log-time">${new Date().toISOString().split('T')[1].slice(0,8)}</span> <span style="color:${color}">${logs[index]}</span>`;
+            term.appendChild(p);
+            index++;
+
+            setTimeout(addLog, Math.random() * 1500 + 500); // Random delay between 0.5s - 2s
+        }
+
+        setTimeout(addLog, 1000);
+    </script>
+</body>
+</html>
