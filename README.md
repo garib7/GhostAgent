@@ -7,6 +7,14 @@
 
 ---
 
+## 🎥 Pitch Video
+
+[![GhostAgent Pitch Deck](https://img.youtube.com/vi/m2oPGL45Tnk/0.jpg)](https://youtu.be/m2oPGL45Tnk "GhostAgent Protocol Pitch Deck")
+
+## 💻 Live Demo (Execution UI)
+
+[![GhostAgent Demo Video](https://img.youtube.com/vi/gVZEdBrG6QI/0.jpg)](https://youtu.be/gVZEdBrG6QI "GhostAgent Protocol Demo Execution")
+
 ## 🌌 Vision & Abstract
 
 In the fast-paced ecosystem of Decentralized Finance, retail traders consistently fall victim to toxic flow, front-running, and high-latency execution. **GhostAgent Protocol** is designed as a counter-measure: an automated, sub-second HFT scalping engine built natively to leverage Solana’s unparalleled finality.
